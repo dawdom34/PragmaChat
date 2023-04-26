@@ -20,13 +20,17 @@ from django.conf.urls.static import static
 
 from personal.views import home_screen_view
 
-from users.views import register_view
+from users.views import register_view, login_view, logout_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_screen_view, name='home'),
     # Register new user
     path('register/', register_view, name='register'),
+    # Login user
+    path('login/', login_view, name='login'),
+    # Logout user
+    path('logout/', logout_view, name='logout'),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
