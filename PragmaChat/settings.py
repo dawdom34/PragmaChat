@@ -54,7 +54,7 @@ ROOT_URLCONF = 'PragmaChat.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR), 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -87,6 +87,15 @@ DATABASES = {
         }
 }
 
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)],
+        }
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
