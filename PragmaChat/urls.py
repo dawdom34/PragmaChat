@@ -21,7 +21,7 @@ from django.contrib.auth import views as auth_views
 
 from personal.views import home_screen_view
 
-from users.views import register_view, login_view, logout_view
+from users.views import register_view, login_view, logout_view, account_search_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,6 +29,8 @@ urlpatterns = [
     path('account/', include('users.urls', namespace='users')),
     # Register new user
     path('register/', register_view, name='register'),
+    # Search user
+    path('search/', account_search_view, name='search'),
     # Login user
     path('login/', login_view, name='login'),
     # Logout user
