@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 
 import json
@@ -44,3 +44,21 @@ def send_friend_request(request):
 	else:
 		payload['response'] = "You must be authenticated to send a friend request."
 	return HttpResponse(json.dumps(payload), content_type="application/json")
+
+def friend_requests(request, *args, **kwargs):
+	"""
+	Return all friend request of authenticated user
+	"""
+	context = {}
+	user = request.user
+	if user.is_authenticated:
+		user_id = kwargs.get("user_id")
+		account = Account.objects.get(pk=user_id)
+		if account == user:
+			friend_requests = FriendRequest.objects.filter(receiver=account, is_active=True)
+			context['friend_requests'] = friend_requests
+		else:
+			return HttpResponse("You can't view another users friend requets.")
+	else:
+		redirect("login")
+	return render(request, "friend/friend_requests.html", context)
