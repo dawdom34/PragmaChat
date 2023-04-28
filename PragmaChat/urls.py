@@ -26,7 +26,10 @@ from users.views import register_view, login_view, logout_view, account_search_v
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_screen_view, name='home'),
+    # Accounts
     path('account/', include('users.urls', namespace='users')),
+    # Friends
+    path('friend/', include('friend.urls', namespace='friend')),
     # Register new user
     path('register/', register_view, name='register'),
     # Search user
