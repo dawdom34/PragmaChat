@@ -96,6 +96,12 @@
                     return;
                 }
 
+                // Handle joining
+                if (data.join){
+                    console.log("Joining public room " + data.join)
+                    // TODO: Queru previous chatroom messages
+                }
+
                 // Handle messages
                 if (data.msg_type == 0){
                     appendChatMessage(data)
@@ -104,6 +110,13 @@
     
             public_chat_socket.addEventListener("open", function(e){
                 console.log("Public ChatSocket OPEN")
+                // Join room
+                if("{{request.user.is_authenticated}}"){
+                    public_chat_socket.send(JSON.stringify({
+                        "command": "join",
+                        "room": "{{room_id}}"
+                    }))
+                }
             })
     
             public_chat_socket.onclose = function(e) {
@@ -158,58 +171,58 @@
         }
     
         function createChatMessageElement(msg, username, profile_image, user_id){
-		var chatLog = document.getElementById("id_chat_log")
+            var chatLog = document.getElementById("id_chat_log")
 
-		var newMessageDiv = document.createElement("div")
-		newMessageDiv.classList.add("d-flex")
-		newMessageDiv.classList.add("flex-row")
-		newMessageDiv.classList.add("message-container")
+            var newMessageDiv = document.createElement("div")
+            newMessageDiv.classList.add("d-flex")
+            newMessageDiv.classList.add("flex-row")
+            newMessageDiv.classList.add("message-container")
 
-		var profileImage = document.createElement("img")
-		profileImage.addEventListener("click", function(e){
-			selectUser(user_id)
-		})
-		profileImage.classList.add("profile-image")
-		profileImage.classList.add("rounded-circle")
-		profileImage.classList.add("img-fluid")
-		profileImage.src = profile_image
-		newMessageDiv.appendChild(profileImage)
+            var profileImage = document.createElement("img")
+            profileImage.addEventListener("click", function(e){
+                selectUser(user_id)
+            })
+            profileImage.classList.add("profile-image")
+            profileImage.classList.add("rounded-circle")
+            profileImage.classList.add("img-fluid")
+            profileImage.src = profile_image
+            newMessageDiv.appendChild(profileImage)
 
-		var div1 = document.createElement("div")
-		div1.classList.add("d-flex")
-		div1.classList.add("flex-column")
+            var div1 = document.createElement("div")
+            div1.classList.add("d-flex")
+            div1.classList.add("flex-column")
 
-		var div2 = document.createElement("div")
-		div2.classList.add("d-flex")
-		div2.classList.add("flex-row")
+            var div2 = document.createElement("div")
+            div2.classList.add("d-flex")
+            div2.classList.add("flex-row")
 
-		var usernameSpan = document.createElement("span")
-		usernameSpan.addEventListener("click", function(e){
-			selectUser(user_id)
-		})
-		usernameSpan.classList.add("username-span")
-		usernameSpan.innerHTML = username
-		div2.appendChild(usernameSpan)
+            var usernameSpan = document.createElement("span")
+            usernameSpan.addEventListener("click", function(e){
+                selectUser(user_id)
+            })
+            usernameSpan.classList.add("username-span")
+            usernameSpan.innerHTML = username
+            div2.appendChild(usernameSpan)
 
-        var timestampSpan = document.createElement('span')
-        timestampSpan.innerHTML = timestamp
-		timestampSpan.classList.add("timestamp-span")
-		timestampSpan.classList.add("d-flex")
-		timestampSpan.classList.add("align-items-center")
-		timestampSpan.addEventListener("click", function(e){selectUser(user_id)})
-        div2.appendChild(timestampSpan)
+            var timestampSpan = document.createElement('span')
+            timestampSpan.innerHTML = timestamp
+            timestampSpan.classList.add("timestamp-span")
+            timestampSpan.classList.add("d-flex")
+            timestampSpan.classList.add("align-items-center")
+            timestampSpan.addEventListener("click", function(e){selectUser(user_id)})
+            div2.appendChild(timestampSpan)
 
-		div1.appendChild(div2)
+            div1.appendChild(div2)
 
-		var msgP = document.createElement("p")
-		msgP.innerHTML = msg
-		msgP.classList.add("msg-p")
-		div1.appendChild(msgP)
+            var msgP = document.createElement("p")
+            msgP.innerHTML = msg
+            msgP.classList.add("msg-p")
+            div1.appendChild(msgP)
 
-		newMessageDiv.appendChild(div1)
+            newMessageDiv.appendChild(div1)
 
-		chatLog.insertBefore(newMessageDiv, chatLog.firstChild)
-	}
+            chatLog.insertBefore(newMessageDiv, chatLog.firstChild)
+        }
 
 	function selectUser(user_id){
 		// Weird work-around for passing arg to url
