@@ -152,7 +152,8 @@
                 const message = messageInputDom.value;
                 public_chat_socket.send(JSON.stringify({
                     "command": "send",
-                    "message": message
+                    "message": message,
+                    "room_id": "{{room_id}}"
                 }));
                 messageInputDom.value = '';
             };
