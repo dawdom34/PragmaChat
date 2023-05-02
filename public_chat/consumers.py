@@ -52,7 +52,7 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 			if command == "send":
 				if len(content["message"].lstrip()) == 0:
 					raise ClientError(422, 'You cannot send an empty message.')
-				await self.send_message(content["message"])
+				await self.send_room(content['room_id'], content['message'])
 			elif command == "join":
 				# Join the room
 				await self.join_room(content['room'])
