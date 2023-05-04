@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.humanize.templatetags.humanize import naturaltime, naturalday
 from datetime import datetime
 
-from .models import PublicChatRoom
+from .models import PublicChatRoom, PublicRoomChatMessage
 
 User = get_user_model()
 
@@ -79,6 +79,9 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 
 		# Get the room and send to the group about it
 		room = await get_room_or_error(room_id)
+
+		# Save the message to database
+		await create_public_chat_message(room, self.scope['user'], message)
 
 		await self.channel_layer.group_send(
 			room.group_name,
@@ -177,6 +180,13 @@ def is_authenticated(user):
 	if user.is_authenticated:
 		return True
 	return False
+
+@database_sync_to_async
+def create_public_chat_message(room, user, message):
+	"""
+	Save the message to database
+	"""
+	return PublicRoomChatMessage.objects.create(user=user, room=room, content=message)
 
 @database_sync_to_async
 def connect_user(room, user):
