@@ -1,3 +1,5 @@
+from collections import OrderedDict
+from typing import Any
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 
@@ -5,13 +7,19 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.contrib.humanize.templatetags.humanize import naturaltime, naturalday
+from django.core.paginator import Paginator
+from django.core.serializers.python import Serializer
+
 from datetime import datetime
+
+from django.db.models.base import Model
 
 from .models import PublicChatRoom, PublicRoomChatMessage
 
 User = get_user_model()
 
 MSG_TYPE_MESSAGE = 0 #Standard message
+DEFAULT_ROOM_CHAT_MESSAGE_PAGE_SIZE = 10
 
 # Example taken from:
 # https://github.com/andrewgodwin/channels-examples/blob/master/multichat/chat/consumers.py
@@ -53,12 +61,24 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 				if len(content["message"].lstrip()) == 0:
 					raise ClientError(422, 'You cannot send an empty message.')
 				await self.send_room(content['room_id'], content['message'])
+
 			elif command == "join":
 				# Join the room
 				await self.join_room(content['room'])
+
 			elif command == 'leave':
 				# Leave the room
 				await self.leave_room(content['room'])
+			
+			elif command == 'get_room_chat_messages':
+				# Get chatroom messages from db
+				room = await get_room_or_error(content['room_id'])
+				payload = await get_room_chat_messages(room, content['page_number'])
+				if payload != None:
+					payload = json.loads(payload)
+					await self.send_messages_payload(payload['messages'], payload['new_page_number'])
+				else:
+					raise ClientError(204,"Something went wrong retrieving the chatroom messages.")
 		except ClientError as e:
 			await self.handle_client_error(e)
 
@@ -172,6 +192,18 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 			errorData['message'] = e.message
 			await self.send_json(errorData)
 		return
+	
+	async def send_messages_payload(self, messages, new_page_number):
+		"""
+		Send a payload of messages to the ui
+		"""
+		print('PublicChatConsumer: send_messages_payload.')
+
+		await self.send_json({
+			"messages_payload": "messages_payload",
+			"messages": messages,
+			"new_page_number": new_page_number,
+		},)
 
 def is_authenticated(user):
 	"""
@@ -213,6 +245,29 @@ def get_room_or_error(room_id):
 		raise ClientError("INVALID_ROOM", "Invalid room")
 	return room
 
+@database_sync_to_async
+def get_room_chat_messages(room, page_number):
+	"""
+	Get paginated chat room messages
+	"""
+	try:
+		qs = PublicRoomChatMessage.objects.by_room(room)
+		p = Paginator(qs, DEFAULT_ROOM_CHAT_MESSAGE_PAGE_SIZE)
+
+		payload = {}
+		messages_data = None
+		new_page_number = int(page_number)
+		if new_page_number <= p.num_pages:
+			new_page_number += 1
+			s = ChatMessageEncoder()
+			payload['messages'] = s.serialize(p.page(page_number).object_list)
+		else:
+			payload['messages'] = 'None'
+		payload['new_page_number'] = new_page_number
+		return json.dumps(payload)
+	except Exception as e:
+		print('EXCEPTION: ' + str(e))
+		return None
 
 class ClientError(Exception):
     """
@@ -225,7 +280,17 @@ class ClientError(Exception):
         if message:
         	self.message = message
 		
-
+class ChatMessageEncoder(Serializer):
+	def get_dump_object(self, obj: Model):
+		dump_object = {}
+		dump_object.update({'msg_type': MSG_TYPE_MESSAGE})
+		dump_object.update({'user_id': str(obj.user.id)})
+		dump_object.update({'username': str(obj.user.username)})
+		dump_object.update({'message': str(obj.content)})
+		dump_object.update({'profile_image': str(obj.user.profile_image.url)})
+		dump_object.update({'natural_timestamp': calculate_timestamp(obj.timestamp)})
+		return dump_object
+		
 def calculate_timestamp(timestamp):
     """
     1. Today or yesterday:
