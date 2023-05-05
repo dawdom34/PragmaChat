@@ -1,5 +1,3 @@
-from collections import OrderedDict
-from typing import Any
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from channels.db import database_sync_to_async
 
@@ -15,11 +13,10 @@ from datetime import datetime
 from django.db.models.base import Model
 
 from .models import PublicChatRoom, PublicRoomChatMessage
+from .constants import *
 
 User = get_user_model()
 
-MSG_TYPE_MESSAGE = 0 #Standard message
-DEFAULT_ROOM_CHAT_MESSAGE_PAGE_SIZE = 10
 
 # Example taken from:
 # https://github.com/andrewgodwin/channels-examples/blob/master/multichat/chat/consumers.py
@@ -167,6 +164,16 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 			"join": str(room.id)
 		})
 
+		# Send the new user count to the room
+		num_connected_users = get_num_connected_users(room)
+		await self.channel_layer.group_send(
+			room.group_name, 
+			{
+				"type": "connected.user.count",
+				"connected_user_count": num_connected_users,
+			}
+		)
+
 	async def leave_room(self, room_id):
 		"""
 		Called by receive_json when someone sent a leave command
@@ -185,6 +192,16 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 		await self.channel_layer.group_discard(
 			room.group_name,
 			self.channel_name,
+		)
+
+		# Send the new user count to the room
+		num_connected_users = get_num_connected_users(room)
+		await self.channel_layer.group_send(
+			room.group_name,
+			{
+				"type": "connected.user.count",
+				"connected_user_count": num_connected_users,
+			}
 		)
 
 	async def handle_client_error(self, e):
@@ -211,6 +228,20 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 			"new_page_number": new_page_number,
 		},)
 
+	async def connected_user_count(self, event):
+		"""
+		Called to send the number of connected users to the room.
+		This number is displayed in the room so other users know how many users are connected to the chat.
+		"""
+		# Send a message down to the client
+		print("PublicChatConsumer: connected_user_count: count: " + str(event["connected_user_count"]))
+		await self.send_json(
+			{
+				"msg_type": MSG_TYPE_CONNECTED_USER_COUNT,
+				"connected_user_count": event["connected_user_count"]
+			},
+		)
+
 	async def display_progress_bar(self, is_displayed):
 		"""
 		If is_displayed = True:
@@ -232,6 +263,14 @@ def is_authenticated(user):
 	if user.is_authenticated:
 		return True
 	return False
+
+def get_num_connected_users(room):
+	"""
+	Get the number of connected users 
+	"""
+	if room.users:
+		return len(room.users.all())
+	return 0
 
 @database_sync_to_async
 def create_public_chat_message(room, user, message):
