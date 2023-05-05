@@ -28,6 +28,8 @@ urlpatterns = [
     path('', home_screen_view, name='home'),
     # Accounts
     path('account/', include('users.urls', namespace='users')),
+    # Chat
+    path('chat/', include('chat.urls', namespace='chat')),
     # Friends
     path('friend/', include('friend.urls', namespace='friend')),
     # Register new user
