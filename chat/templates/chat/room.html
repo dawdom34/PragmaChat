@@ -198,9 +198,18 @@
 	var roomId = null;
 
 	function onStart(){
+		// Auto select first user on list to open chat with
+		{% if m_and_f %}
+			onSelectFriend("{{m_and_f.0.friend.id}}")
+		{% endif %}
+		// Preload images for users on friends list
 		{% for x in m_and_f %}
 			preloadImage("{{x.friend.profile_image.url}}", "id_friend_img_{{x.friend.id}}")
 		{% endfor %}
+	}
+
+	function onSelectFriend(userId){
+		createOrReturnPrivateChat(userId)
 	}
 
 	function closeWebSocket(){
@@ -286,6 +295,34 @@
 	        console.log("ChatSocket connecting..")
 	    }
 	}
+
+	function createOrReturnPrivateChat(id){
+		payload = {
+			"csrfmiddlewaretoken": "{{ csrf_token }}",
+			"user2_id": id,
+		}
+		$.ajax({
+			type: 'POST',
+			dataType: "json",
+			url: "{% url 'chat:create-or-return-private-chat' %}",
+			data: payload,
+			timeout: 5000,
+			success: function(data) {
+				console.log("SUCCESS", data)
+				if(data['response'] == "Successfully got the chat."){
+					setupWebSocket(data['chatroom_id'])
+				}
+				else if(data['response'] != null){
+					alert(data['response'])
+				}
+			},
+			error: function(data) {
+				console.error("ERROR...", data)
+				alert("Something went wrong.")
+			},
+		});
+	}
+
 </script>
 
 {% endblock content %}
