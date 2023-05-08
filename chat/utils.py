@@ -13,4 +13,5 @@ def find_or_create_private_chat(user1, user2):
 		except PrivateChatRoom.DoesNotExist:
 			chat = PrivateChatRoom(user1=user1, user2=user2)
 			chat.save()
-	return
+	return chat
+
