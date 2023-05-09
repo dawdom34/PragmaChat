@@ -282,6 +282,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 			- Hide the progress bar on UI
 		"""
 		print("DISPLAY PROGRESS BAR: " + str(is_displayed))
+		await self.send_json(
+			{
+				"display_progress_bar": is_displayed
+			}
+		)
 
 	async def handle_client_error(self, e):
 		"""
