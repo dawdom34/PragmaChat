@@ -6,6 +6,7 @@ from django.urls import path
 
 from public_chat.consumers import PublicChatConsumer
 from chat.consumers import ChatConsumer
+from notification.consumers import NotificationConsumer
 
 # Define connection type (mapping type names to ASGI applications that serve them)
 application = ProtocolTypeRouter({
@@ -16,6 +17,7 @@ application = ProtocolTypeRouter({
             URLRouter([
                 path('public_chat/<room_id>/', PublicChatConsumer),
                 path('chat/<room_id>/', ChatConsumer),
+                path('', NotificationConsumer),
             ])
         )
     )
