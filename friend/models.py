@@ -60,6 +60,13 @@ class FriendList(models.Model):
 		if friend in self.friends.all():
 			return True
 		return False
+	
+	@property
+	def get_cname(self):
+		"""
+		For determining what kind of object is associated with a Notification
+		"""
+		return "FriendList"
 
 
 class FriendRequest(models.Model):
@@ -112,3 +119,10 @@ class FriendRequest(models.Model):
 		"""
 		self.is_active = False
 		self.save()
+
+	@property
+	def get_cname(self):
+		"""
+		For determining what kind of object is associated with a Notification
+		"""
+		return "FriendRequest"
