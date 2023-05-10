@@ -184,6 +184,11 @@
 			setGeneralPaginationExhausted()
 		}
 
+		// Refresh [newest_timestamp >= NOTIFICATIONS >= oldest_timestamp]
+		if(data.general_msg_type == 2){
+			refreshGeneralNotificationsData(data['notifications'])
+		}
+
 		// Update notification
 		if(data.general_msg_type == 5){
 			updateGeneralNotificationDiv(data['notification'])
