@@ -179,6 +179,12 @@
 			handleGeneralNotificationsData(data['notifications'], data['new_page_number'])
 		}
 
+		// "General" Pagination exhausted. No more results.
+		if(data.general_msg_type == 1){
+			setGeneralPaginationExhausted()
+		}
+
+		// Update notification
 		if(data.general_msg_type == 5){
 			updateGeneralNotificationDiv(data['notification'])
 		}
