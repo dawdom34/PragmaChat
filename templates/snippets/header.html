@@ -179,6 +179,10 @@
 			handleGeneralNotificationsData(data['notifications'], data['new_page_number'])
 		}
 
+		if(data.general_msg_type == 5){
+			updateGeneralNotificationDiv(data['notification'])
+		}
+
 	}
 
 	notificationSocket.onclose = function(e) {
