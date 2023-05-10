@@ -57,6 +57,14 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 				else:
 					payload = json.loads(payload)
 					await self.send_general_notifications_payload(payload['notifications'], payload['new_page_number'])
+			elif command == "accept_friend_request":
+				notification_id = content['notification_id']
+				payload = await accept_friend_request(self.scope['user'], notification_id)
+				if payload == None:
+					raise ClientError("Something went wrong. Try refreshing the browser.")
+				else:
+					payload = json.loads(payload)
+					await self.send_updated_friend_request_notification(payload['notification'])
 		except Exception as e:
 			print("EXCEPTION: receive_json: " + str(e))
 			pass
@@ -80,6 +88,20 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 				"general_msg_type": GENERAL_MSG_TYPE_NOTIFICATIONS_PAYLOAD,
 				"notifications": notifications,
 				"new_page_number": new_page_number,
+			},
+		)
+
+	async def send_updated_friend_request_notification(self, notification):
+		"""
+		After a friend request is accepted or declined, send the updated notification to template
+		payload contains 'notification' and 'response':
+		1. payload['notification']
+		2. payload['response']
+		"""
+		await self.send_json(
+			{
+				"general_msg_type": GENERAL_MSG_TYPE_UPDATED_NOTIFICATION,
+				"notification": notification,
 			},
 		)
 
@@ -112,3 +134,26 @@ def get_general_notifications(user, page_number):
 		raise ClientError("User must be authenticated to get notifications.")
 
 	return json.dumps(payload)
+
+@database_sync_to_async
+def accept_friend_request(user, notification_id):
+    """
+    Accept a friend request
+    """
+    payload = {}
+    if user.is_authenticated:
+        try:
+            notification = Notification.objects.get(pk=notification_id)
+            friend_request = notification.content_object
+            # confirm this is the correct user
+            if friend_request.receiver == user:
+                # accept the request and get the updated notification
+                updated_notification = friend_request.accept()
+
+                # return the notification associated with this FriendRequest
+                s = LazyNotificationEncoder()
+                payload['notification'] = s.serialize([updated_notification])[0]
+                return json.dumps(payload)
+        except Notification.DoesNotExist:
+            raise ClientError("An error occurred with that notification. Try refreshing the browser.")
+    return None
