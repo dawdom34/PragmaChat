@@ -6,7 +6,7 @@ from .models import PrivateChatRoom, RoomChatMessage, UnreadChatRoomMessages
 
 
 class PrivateChatRoomAdmin(admin.ModelAdmin):
-	list_display = ['id','user1', 'user2', ]
+	list_display = ['id','user1', 'user2']
 	search_fields = ['id', 'user1__username', 'user2__username','user1__email', 'user2__email', ]
 	readonly_fields = ['id',]
 
