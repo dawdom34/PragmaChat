@@ -189,6 +189,11 @@
 			refreshGeneralNotificationsData(data['notifications'])
 		}
 
+		//
+		if(data.general_msg_type == 3){
+			handleNewGeneralNotificationsData(data['notifications'])
+		}
+
 		// Update notification
 		if(data.general_msg_type == 5){
 			updateGeneralNotificationDiv(data['notification'])
