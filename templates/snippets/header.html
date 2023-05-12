@@ -213,6 +213,11 @@
 			handleChatNotificationsData(data['notifications'], data['new_page_number'])
 		}
 
+		// refreshed chat notifications
+		if(data.chat_msg_type == 13){
+			handleNewChatNotificationsData(data['notifications'])
+		}
+
 	}
 
 	notificationSocket.onclose = function(e) {
