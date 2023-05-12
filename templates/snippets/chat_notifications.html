@@ -177,6 +177,8 @@
 			div.appendChild(span)
 			card.appendChild(div)
 			notificationContainer.appendChild(card)
+
+			setChatNotificationsCount([])
 		}
 	}
 
@@ -434,6 +436,19 @@
 		
 	}
 
+	function setChatNotificationsCount(count){
+		var countElement = document.getElementById("id_chat_notifications_count")
+		if(count > 0){
+			countElement.style.background = "red"
+			countElement.style.display = "block"
+			countElement.innerHTML = count
+		}
+		else{
+			countElement.style.background = "transparent"
+			countElement.style.display = "none"
+		}
+	}
+
 	/*
 		Retrieve the next page of chat notifications
 		Called when the user scrolls to the bottom of the popup menu.
@@ -445,6 +460,18 @@
 			notificationSocket.send(JSON.stringify({
 				"command": "get_chat_notifications",
 				"page_number": pageNumber,
+			}));
+		}
+	}
+
+	/*
+		Retrieve the number of unread chat notifications. (This is the red dot in the notifications icon)
+		Called every CHAT_NOTIFICATION_INTERVAL
+	*/
+	function getUnreadChatNotificationsCount(){
+		if("{{request.user.is_authenticated}}"){
+			notificationSocket.send(JSON.stringify({
+				"command": "get_unread_chat_notifications_count",
 			}));
 		}
 	}
@@ -483,6 +510,7 @@
 	function startChatNotificationService(){
 		if("{{request.user.is_authenticated}}" == "True"){
 			setInterval(getNewChatNotifications, CHAT_NOTIFICATION_INTERVAL)
+			setInterval(getUnreadChatNotificationsCount, CHAT_NOTIFICATION_INTERVAL)
 		}
 	}
 
