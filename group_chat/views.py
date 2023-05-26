@@ -258,3 +258,54 @@ def add_friend_to_group(request):
         payload['response'] = 'You must be authenticated to edit this group.'
 
     return HttpResponse(json.dumps(payload))
+
+def remove_friend_from_group(request):
+    """
+    Remove selected users from group
+    Activated by ajax function
+    """
+    user = request.user
+    payload = {}
+
+    if user.is_authenticated and request.method == 'POST':
+        group_id = request.POST.get('group_id')
+        selected_friends = [x for x in list(request.POST.get('selected_friends')) if x != ',']
+        # Check if group exist
+        try:
+            group = GroupChatRoom.objects.get(id=int(group_id))
+            # Check if user has privileges to edit group members
+            if user in group.admins.all():
+                # Check if selected friends exist
+                users_valid = True
+                for friend in selected_friends:
+                    try:
+                        x = Account.objects.get(id=int(friend))
+                        # check if user is owner
+                        if group.is_owner(x):
+                            payload['response'] = 'You cannot remove the owner of this group'
+                            users_valid = False
+                            break
+                        # Check if user has privileges to remove admin (Only owner can remove admin from group)
+                        elif group.is_admin(x) and not group.is_owner(user):
+                            payload['response'] = 'You cannon remove admin.'
+                            users_valid = False
+                            break
+                    except Account.DoesNotExist:
+                        users_valid = False
+                        payload['response'] = 'One of selected users is invalid.'
+                        break
+                # remove users from group
+                if users_valid:
+                    for friend in selected_friends:
+                        x = Account.objects.get(id=int(friend))
+                        group.remove_user(x)
+                        group.remove_admin(x)
+                    payload['response'] = 'Friends removed.'
+            else:
+                payload['response'] = 'You have no privileges to edit this group.'
+        except GroupChatRoom.DoesNotExist:
+            payload['response'] = 'Group with given ID does not exist.'
+    else:
+        payload['response'] = 'You must be authenticated to edit this group.'
+    
+    return HttpResponse(json.dumps(payload))

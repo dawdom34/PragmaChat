@@ -114,7 +114,7 @@
                             <div class="card-body p-1">	
                                 <div class="d-flex flex-column friends-list-container ">
                                     {% for friend in group_friends %}
-                                    <div class="d-flex flex-row p-2 friend-container flex-grow-1" >
+                                    <div class="d-flex flex-row p-2 friend-container flex-grow-1" onclick="checkFriend('member{{friend.0.id}}')">
                                         <img class="profile-image-small rounded-circle img-fluid" id="id_group_friend_img_{{friend.0.id}}" src="{% static 'images/dummy-profile.png' %}" >
                                         <div class="d-flex flex-column">
                                             <span class="username-span">
@@ -132,7 +132,7 @@
                                         {% elif friend.2 %}
                                             {% if owner == request.user %}
                                             <div class="d-flex flex-column" style="margin-left: auto;">
-                                                <input id="member{{friend.0.id}}" type="checkbox" >								
+                                                <input id="member{{friend.0.id}}" type="checkbox" onclick="addOrRemoveSelectedMember('{{friend.0.id}}')">								
                                             </div>
                                             {% else %}
                                             <div class="d-flex flex-column" style="margin-left: auto;">
@@ -141,7 +141,7 @@
                                             {% endif %}
                                         {% else %}
                                         <div class="d-flex flex-column" style="margin-left: auto;">
-                                            <input id="member{{friend.0.id}}" type="checkbox" >								
+                                            <input id="member{{friend.0.id}}" type="checkbox" onclick="addOrRemoveSelectedMember('{{friend.0.id}}')">								
                                         </div>
                                         {% endif %}
                                     </div>
@@ -150,7 +150,7 @@
                             </div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="remove-friends-from-group-button" >
+                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="remove-friends-from-group-button" onclick="removeFriendFromGroupTrigger()">
                         Remove from group
                     </button>
                     {% if owner == request.user%}
@@ -209,6 +209,7 @@
 
 {% include 'group_chat/snippets/edit_group_title.html' %}
 {% include 'group_chat/snippets/add_friend_to_group.html' %}
+{% include 'group_chat/snippets/remove_friend_from_group.html' %}
 
 <script type="text/javaScript">
 
@@ -307,40 +308,6 @@
     editGroupTitle(new_title, group_id, refreshFunction);
     }
 
-    function checkFriend(user_id){
-    // Check or uncheck checkbox after user click on div with username
-    var user_check_box = document.getElementById(user_id)
-    if (user_check_box.checked){
-        user_check_box.click()
-    }else{
-        user_check_box.click()
-    }
-}
-    // Storage for users selected to add to group
-    var add_friends_selected_users = []
-
-    function addOrRemoveSelectedUser(user_id){
-    // Add user id to list, if user id already in list then remove it
-    var add_friends_button = document.getElementById("add-friends-to-group-button")
-    if (add_friends_selected_users.includes(user_id)){
-        let index = add_friends_selected_users.indexOf(user_id)
-        add_friends_selected_users.splice(index, 1);
-        console.log(add_friends_selected_users)
-    }else{
-        add_friends_selected_users.push(user_id);
-        console.log(add_friends_selected_users)
-    }
     
-    // disable button if none of friends are selected
-    if (add_friends_selected_users.length == 0){
-        add_friends_button.classList.add("disabled")
-    }else{
-        add_friends_button.classList.remove("disabled")
-    }
-}
-
-function addFriendToGroupTrigger() {
-    addFriendToGroup("{{group_id}}", add_friends_selected_users.toString(), refreshFunction)
-}
 </script>
 {% endblock %}
