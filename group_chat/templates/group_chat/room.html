@@ -213,4 +213,13 @@
 </div>
 <!-- Client Error MODAL -->
 
+<script type="text/javaScript">
+    // Add event tistener to 'create group' button
+    var create_group_button = document.getElementById("create-group")
+	create_group_button.addEventListener("click", function(e){
+		var url = "{% url 'group_chat:create-group-view' %}"
+		window.location.href = url
+	})
+</script>
+
 {% endblock content %}

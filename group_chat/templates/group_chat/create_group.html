@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+  .mt-100 {
+    margin-top: 100px
+  }
+  #group-name-input{
+    margin-bottom: 10px;
+    height: 50px;
+    width: 100%;
+    background-color: rgb(243, 243, 243);
+    outline: none;
+    border: 1px solid rgb(223, 223, 223);
+    border-radius: 1%;
+    padding-left: 10px;
+    font-size: 14px;
+  }
+  #title{
+    margin-bottom: 15px;
+  }
+</style>
+
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-2">
+    </div>
+    <div class="col-md-8">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.css">
+
+      <div class="row d-flex justify-content-center mt-100">
+        <div class="col-md-6">
+          <h3 id="title">Create group</h3>
+          <input type="text" id="group-name-input" placeholder="Group name">
+          <select id="choices-multiple-remove-button" placeholder="Select at least two friends" multiple>
+            {% for friend in friends %}
+            <option value="{{friend.id}}">{{friend.username}}</option>
+            {% endfor%}
+          </select>
+          <button id="create-group-button" type="button" class="btn btn-primary btn-block">
+            Create
+          </button>
+        </div>
+      </div>
+
+    </div>
+    <div class="col-md-2">
+    </div>
+  </div>
+</div>
+
+{% include 'group_chat/snippets/create_group.html' %}
+
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/bbbootstrap/libraries@main/choices.min.js"></script>
+
+<script>
+  $(document).ready(function () {
+
+    var multipleCancelButton = new Choices('#choices-multiple-remove-button', {
+      removeItemButton: true,
+
+      renderChoiceLimit: 5
+    });
+
+
+  });
+
+  // Return an array of the selected opion values
+  // select is an HTML select element
+  function getSelectValues(select) {
+    var result = "";
+    var options = select && select.options;
+    var opt;
+
+    for (var i=0, iLen=options.length; i<iLen; i++) {
+      opt = options[i];
+
+      if (opt.selected) {
+        result += opt.value;
+        result += ", "
+      }
+    }
+    return result;
+  }
+
+  var button = document.getElementById("create-group-button")
+  button.addEventListener("click", function(e){
+    var group_name = document.getElementById("group-name-input").value
+    console.log(group_name)
+    var select_tag = document.getElementById("choices-multiple-remove-button")
+    var selected_friends = getSelectValues(select_tag)
+    console.log(selected_friends)
+    createGroup(group_name, selected_friends, redirectFunction)
+  })
+</script>
+{% endblock %}
