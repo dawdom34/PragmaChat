@@ -207,6 +207,8 @@
 	</div>
 </div>
 
+{% include 'group_chat/snippets/edit_group_title.html' %}
+
 <script type="text/javaScript">
 
     preloadImageTrigger()
@@ -222,5 +224,86 @@
             preloadImage("{{friend.profile_image.url|safe}}", "id_admin_img_{{friend.id}}")
         {% endfor %}
     }
+
+    function replaceTitle(){
+        // Remove old title element
+        var old_title_element = document.getElementById("group-name");
+        old_title_element.remove();
+        // Remove old edit button
+        var edit_button = document.getElementById("edit-name-button")
+        edit_button.remove();
+        // Create new input element
+        var name_element= document.getElementById("group-name-element");
+        var new_title_element = document.createElement("input");
+        new_title_element.setAttribute("id", "new-title-element")
+        // Add value to the input
+        new_title_element.value = "{{group_title}}";
+        // Add input element to div
+        name_element.appendChild(new_title_element);
+
+        // Create accept button element and append it to div
+        var accept_button = document.createElement("span");
+        accept_button.setAttribute("id", "accept-button")
+        accept_button.classList.add("material-icons");
+        accept_button.innerHTML = "check_circle";
+        accept_button.onclick = trigerEditTitle;
+        name_element.appendChild(accept_button);
+
+        // Create cancel button and append it to div
+        var cancel_button = document.createElement("span");
+        cancel_button.classList.add("material-icons");
+        cancel_button.setAttribute("id", "cancel-button")
+        cancel_button.innerHTML = "dangerous";
+        cancel_button.style.fontSize = "26px"
+        cancel_button.onclick = trigerRestoreTitle;
+        name_element.appendChild(cancel_button);
+  
+    }
+
+    function restoreTitle(){
+        var inp = document.getElementById("new-title-element")
+        var acc = document.getElementById("accept-button")
+        var can = document.getElementById("cancel-button")
+        inp.remove()
+        acc.remove()
+        can.remove()
+
+        // Parent element
+        var group_name_element = document.getElementById("group-name-element");
+        // Restore title
+        var restored_title_element = document.createElement("h3");
+        restored_title_element.innerHTML = "{{group_title}}";
+        restored_title_element.style.display = "inline-block";
+        restored_title_element.setAttribute("id", "group-name");
+
+        group_name_element.appendChild(restored_title_element)
+
+        // Restore edit title button
+        var restored_edit_button = document.createElement("span");
+        restored_edit_button.classList.add("material-icons");
+        restored_edit_button.classList.add("edit-button");
+        restored_edit_button.setAttribute("title", "Edit")
+        restored_edit_button.setAttribute("id", "edit-name-button");
+        restored_edit_button.innerHTML = "edit_square";
+        restored_edit_button.onclick = trigerReplaceTitle;
+
+        group_name_element.appendChild(restored_edit_button);
+
+    }
+
+    function trigerReplaceTitle() {
+        replaceTitle()
+    }
+
+    function trigerRestoreTitle(params) {
+        restoreTitle()
+    }
+
+    function trigerEditTitle(){
+    // Send ajax request to backend
+    var new_title = document.getElementById("new-title-element").value;
+    var group_id = "{{group_id}}"
+    editGroupTitle(new_title, group_id, refreshFunction);
+}
 </script>
 {% endblock %}

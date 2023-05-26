@@ -1,0 +1,36 @@
+<script type="text/javascript">
+	function editGroupTitle(new_title, group_id, refreshFunction){
+		payload = {
+			"csrfmiddlewaretoken": "{{ csrf_token }}",
+			"new_title": new_title,
+            "group_id": group_id
+		}
+		$.ajax({
+			type: 'POST',
+			dataType: "json",
+			url: "{% url 'group_chat:edit-group-title' %}",
+			data: payload,
+			timeout: 5000,
+			success: function(data) {
+				console.log("SUCCESS", data)
+				if(data['response'] == "Title changed."){
+                    refreshFunction()
+				}
+				else if(data['response'] != null){
+					alert(data['response'])
+				}
+			},
+			error: function(data) {
+				console.error("ERROR...", data)
+				//alert("Something went wrong.")
+			},
+			complete: function(data){
+				
+			}
+		});
+	}
+
+    function refreshFunction(){
+        window.location.reload();
+    }
+</script>

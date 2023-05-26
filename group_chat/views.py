@@ -176,3 +176,34 @@ def edit_group_view(request, *args, **kwargs):
     context['group_id'] = group.id
     
     return render(request, 'group_chat/edit_group.html', context)
+
+def edit_group_title(request):
+    """
+    Change title of the group
+    Activated by ajax function
+    """
+    user = request.user
+    payload = {}
+
+    if user.is_authenticated and request.method == 'POST':
+        group_id = request.POST.get('group_id')
+        new_title = request.POST.get('new_title')
+        # Check if group with given id exist
+        try:
+            group = GroupChatRoom.objects.get(id=int(group_id))
+            # Check if user has privileges to edit group title
+            if user in group.admins.all():
+                # Check if new title is valid
+                if new_title.strip() != '':
+                    group.title = new_title
+                    group.save()
+                    payload['response'] = 'Title changed.'
+                else:
+                    payload['response'] = 'Invalid title.'
+            else:
+                payload['response'] = 'You have no privileges to edit this group.'
+        except GroupChatRoom.DoesNotExist:
+            payload['response'] = 'Group with given ID does not exist.'
+    else:
+        payload['response'] = 'You must be authenticated to edit this group.'
+    return HttpResponse(json.dumps(payload))
