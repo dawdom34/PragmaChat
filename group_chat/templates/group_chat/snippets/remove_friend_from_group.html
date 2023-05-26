@@ -1,0 +1,71 @@
+<script type="text/javascript">
+	function removeFriendFromGroup(group_id, selected_friends, refreshFunction){
+		payload = {
+			"csrfmiddlewaretoken": "{{ csrf_token }}",
+			"group_id": group_id,
+            "selected_friends": selected_friends
+		}
+		$.ajax({
+			type: 'POST',
+			dataType: "json",
+			url: "{% url 'group_chat:remove-friend-from-group' %}",
+			data: payload,
+			timeout: 5000,
+			success: function(data) {
+				console.log("SUCCESS", data)
+				if(data['response'] == "Friends removed."){
+					refreshFunction()
+				}
+				else if(data['response'] != null){
+					alert(data['response'])
+				}
+			},
+			error: function(data) {
+				console.error("ERROR...", data)
+				//alert("Something went wrong.")
+			},
+			complete: function(data){
+				
+			}
+		});
+	}
+
+    function refreshFunction(){
+        window.location.reload();
+    }
+
+    var selected_members = []
+
+function addOrRemoveSelectedMember(member_id) {
+    // Add user to selected_members, if user id already in list remove it
+    var remove_friends_button = document.getElementById("remove-friends-from-group-button")
+    try{
+        var promote_to_admin_button = document.getElementById("promote-user-to-admin-button")
+    }catch{
+        var promote_to_admin_button = null
+    }
+    
+    if (selected_members.includes(member_id)){
+        let index = selected_members.indexOf(member_id)
+        selected_members.splice(index, 1)
+    }else{
+        selected_members.push(member_id)
+    }
+    // disable or enable button
+    if (selected_members.length == 0){
+        remove_friends_button.classList.add("disabled")
+        if (promote_to_admin_button !== null){
+            promote_to_admin_button.classList.add("disabled")
+        }
+    }else{
+        remove_friends_button.classList.remove("disabled")
+        if (promote_to_admin_button !== null){
+            promote_to_admin_button.classList.remove("disabled")
+        }
+    }
+}
+
+function removeFriendFromGroupTrigger() {
+    removeFriendFromGroup("{{group_id}}", selected_members.toString(), refreshFunction)
+}
+</script>
