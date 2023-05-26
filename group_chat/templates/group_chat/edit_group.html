@@ -154,7 +154,7 @@
                         Remove from group
                     </button>
                     {% if owner == request.user%}
-                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="promote-user-to-admin-button" >
+                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="promote-user-to-admin-button" onclick="promoteUsersToAdminTrigger()">
                         Promote to admin
                     </button>
                     {% endif %}
@@ -210,6 +210,7 @@
 {% include 'group_chat/snippets/edit_group_title.html' %}
 {% include 'group_chat/snippets/add_friend_to_group.html' %}
 {% include 'group_chat/snippets/remove_friend_from_group.html' %}
+{% include 'group_chat/snippets/promote_user_to_admin.html' %}
 
 <script type="text/javaScript">
 

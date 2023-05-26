@@ -1,0 +1,40 @@
+<script type="text/javascript">
+	function promoteUsersToAdmin(group_id, users_id, refreshFunction){
+		payload = {
+			"csrfmiddlewaretoken": "{{ csrf_token }}",
+            "group_id": group_id,
+			"users_id": users_id
+		}
+		$.ajax({
+			type: 'POST',
+			dataType: "json",
+			url: "{% url 'group_chat:promote-to-admin' %}",
+			data: payload,
+			timeout: 5000,
+			success: function(data) {
+				console.log("SUCCESS", data)
+				if(data['response'] == "Users promoted."){
+					refreshFunction()
+				}
+				else if(data['response'] != null){
+					alert(data['response'])
+				}
+			},
+			error: function(data) {
+				console.error("ERROR...", data)
+				//alert("Something went wrong.")
+			},
+			complete: function(data){
+				
+			}
+		});
+	}
+
+    function refreshFunction(){
+        window.location.reload()
+    }
+
+    function promoteUsersToAdminTrigger() {
+        promoteUsersToAdmin("{{group_id}}", selected_members.toString(), refreshFunction)
+}
+</script>
