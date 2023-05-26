@@ -207,3 +207,54 @@ def edit_group_title(request):
     else:
         payload['response'] = 'You must be authenticated to edit this group.'
     return HttpResponse(json.dumps(payload))
+
+def add_friend_to_group(request):
+    """
+    Add selected users to the group
+    Activated by ajax function
+    """
+    user = request.user
+    payload = {}
+
+    if user.is_authenticated and request.method == 'POST':
+        group_id = request.POST.get('group_id')
+        selected_friends = [x for x in list(request.POST.get('selected_friends')) if x != ',']
+        # Check if group exist
+        try:
+            group = GroupChatRoom.objects.get(id=int(group_id))
+            # Check if user has privileges to edit group members
+            if user in group.admins.all():
+                # check if selected users exist
+                users_valid = True
+                for friend in selected_friends:
+                    try:
+                         x = Account.objects.get(id=int(friend))
+                    except Account.DoesNotExist:
+                        users_valid = False
+                        payload['response'] = 'One of selected users is invalid.'
+                        break
+                # Check if selected users are on friends list
+                friends_valid = True
+                friends_list = FriendList.objects.get(user=user)
+                for friend in selected_friends:
+                    x = Account.objects.get(id=int(friend))
+                    if friends_list.is_mutual_friend(x):
+                        pass
+                    else:
+                        friends_valid = False
+                        payload['response'] = 'You can add only users from your friends list.'
+                        break
+                # Add users to group
+                if users_valid and friends_valid:
+                    for friend in selected_friends:
+                        x = Account.objects.get(id=int(friend))
+                        group.add_user(x)
+                    payload['response'] = 'Friends added.'
+            else:
+                payload['response'] = 'You have no privileges to edit this group.'
+        except GroupChatRoom.DoesNotExist:
+            payload['response'] = 'Group with given ID does not exist.'
+    else:
+        payload['response'] = 'You must be authenticated to edit this group.'
+
+    return HttpResponse(json.dumps(payload))
