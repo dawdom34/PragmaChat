@@ -309,3 +309,48 @@ def remove_friend_from_group(request):
         payload['response'] = 'You must be authenticated to edit this group.'
     
     return HttpResponse(json.dumps(payload))
+
+def promote_to_admin(request):
+    """
+    Promote selected users to admin in given group
+    Activated by ajax function
+    """
+    user = request.user
+    payload = {}
+
+    if user.is_authenticated and request.method == "POST":
+        # Check if group exist
+        group_id = request.POST.get('group_id')
+        try:
+            group = GroupChatRoom.objects.get(id=int(group_id))
+            # Check if auth user have privileges to add new admins(Only owner can do this)
+            if group.is_owner(user):
+                # Check is selected users exist
+                users_id = [x for x in list(request.POST.get('users_id')) if x != ',']
+                users_valid = True
+                for user in users_id:
+                    try:
+                        acc = Account.objects.get(id=int(user))
+                        # Check if user is already admin
+                        if group.is_admin(acc):
+                            payload['response'] = 'One of selected users is already an admin.'
+                            users_valid = False
+                            break
+                    except Account.DoesNotExist:
+                        payload['response'] = 'One of selected users is not valid.'
+                        users_valid = False
+                        break
+                # Promote users to admin
+                if users_valid:
+                    for user in users_id:
+                        acc = Account.objects.get(id=int(user))
+                        group.add_admin(acc)
+                    payload['response'] = 'Users promoted.'
+            else:
+                payload['response'] = 'You have no privileges to add new admins.'
+        except GroupChatRoom.DoesNotExist:
+            payload['response'] = 'Group does not exist.'
+    else:
+        payload['response'] = 'You must be authenticated to add new admins.'
+
+    return HttpResponse(json.dumps(payload))
