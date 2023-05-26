@@ -20,8 +20,15 @@ def group_chat_room_view(request):
     if not user.is_authenticated:
         return redirect('login')
     
+    # Get groups of which the user is a part
+    groups_raw = GroupChatRoom.objects.filter(users=user)
+
+    # Combine groups with infomation about if user is an admin of each one
+    groups = [(x, x.is_admin(user)) for x in groups_raw]
+    
     context['debug'] = DEBUG
     context['debug_mode'] = settings.DEBUG
+    context['groups'] = groups
     return render(request, 'group_chat/room.html', context)
 
 def create_group_view(request):
