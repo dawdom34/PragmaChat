@@ -1,0 +1,58 @@
+<script type="text/javascript">
+	function removeFromAdmins(group_id, users_id, refreshFunction){
+		payload = {
+			"csrfmiddlewaretoken": "{{ csrf_token }}",
+            "group_id": group_id,
+			"users_id": users_id
+		}
+		$.ajax({
+			type: 'POST',
+			dataType: "json",
+			url: "{% url 'group_chat:remove-from-admins' %}",
+			data: payload,
+			timeout: 5000,
+			success: function(data) {
+				console.log("SUCCESS", data)
+				if(data['response'] == "Users removed."){
+					refreshFunction()
+				}
+				else if(data['response'] != null){
+					alert(data['response'])
+				}
+			},
+			error: function(data) {
+				console.error("ERROR...", data)
+				//alert("Something went wrong.")
+			},
+			complete: function(data){
+				
+			}
+		});
+	}
+
+    function refreshFunction(){
+        window.location.reload()
+    }
+
+    admins_to_remove = []
+
+    function addOrRemoveAdmin(user_id) {
+        var remove_admin_button = document.getElementById("remove-from-admins-button")
+        if (admins_to_remove.includes(user_id)){
+            let index = admins_to_remove.indexOf(user_id)
+            admins_to_remove.splice(index, 1)
+        }else{
+            admins_to_remove.push(user_id)
+        }
+        // disable or enable button
+    if(admins_to_remove.length == 0){
+        remove_admin_button.classList.add("disabled")
+    }else{
+        remove_admin_button.classList.remove("disabled")
+    }
+    }
+
+    function removeFromAdminsTrigger(){
+        removeFromAdmins("{{group_id}}", admins_to_remove.toString(), refreshFunction)
+    }
+</script>
