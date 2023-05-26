@@ -32,6 +32,8 @@ urlpatterns = [
     path('chat/', include('chat.urls', namespace='chat')),
     # Friends
     path('friend/', include('friend.urls', namespace='friend')),
+    # Group chat
+    path('group_chat/', include('group_chat.urls', namespace='group_chat')),
     # Register new user
     path('register/', register_view, name='register'),
     # Search user
