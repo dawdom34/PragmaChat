@@ -307,40 +307,6 @@
     editGroupTitle(new_title, group_id, refreshFunction);
     }
 
-    function checkFriend(user_id){
-    // Check or uncheck checkbox after user click on div with username
-    var user_check_box = document.getElementById(user_id)
-    if (user_check_box.checked){
-        user_check_box.click()
-    }else{
-        user_check_box.click()
-    }
-}
-    // Storage for users selected to add to group
-    var add_friends_selected_users = []
-
-    function addOrRemoveSelectedUser(user_id){
-    // Add user id to list, if user id already in list then remove it
-    var add_friends_button = document.getElementById("add-friends-to-group-button")
-    if (add_friends_selected_users.includes(user_id)){
-        let index = add_friends_selected_users.indexOf(user_id)
-        add_friends_selected_users.splice(index, 1);
-        console.log(add_friends_selected_users)
-    }else{
-        add_friends_selected_users.push(user_id);
-        console.log(add_friends_selected_users)
-    }
     
-    // disable button if none of friends are selected
-    if (add_friends_selected_users.length == 0){
-        add_friends_button.classList.add("disabled")
-    }else{
-        add_friends_button.classList.remove("disabled")
-    }
-}
-
-function addFriendToGroupTrigger() {
-    addFriendToGroup("{{group_id}}", add_friends_selected_users.toString(), refreshFunction)
-}
 </script>
 {% endblock %}
