@@ -134,3 +134,45 @@ def create_group(request):
         payload['response'] = 'You must be authenticated to create group.'
     
     return HttpResponse(json.dumps(payload))
+
+def edit_group_view(request, *args, **kwargs):
+    """
+    Display all information about the group with ability to edit them
+    Only admin have access to this view
+    """
+    user = request.user
+    context = {}
+    group_id = kwargs.get('group_id')
+
+    if not user.is_authenticated:
+        return redirect('login')
+    
+    # Check if group exist
+    try:
+        group = GroupChatRoom.objects.get(id=group_id)
+    except GroupChatRoom.DoesNotExist:
+        raise ValueError('Group does not exist')
+    
+    # Check if user is admin
+    if not group.is_admin(user):
+        raise ValueError('You have no admin privileges.')
+    
+    # Combine users is group with extra information about privileges
+    group_friends = [(x, group.is_owner(x), group.is_admin(x)) for x in group.users.all()]
+    
+    # Get all friends of authenticated user
+    friends_list = FriendList.objects.get(user=user)
+    # Filter users who are not in the group
+    friends = []
+    for friend in friends_list.friends.all():
+        if friend not in group.users.all():
+            friends.append(friend)
+
+    context['group_friends'] = group_friends
+    context['friends'] = friends
+    context['admins'] = group.admins.all()
+    context['owner'] = group.owner
+    context['group_title'] = group.title
+    context['group_id'] = group.id
+    
+    return render(request, 'group_chat/edit_group.html', context)
