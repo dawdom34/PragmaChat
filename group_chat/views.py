@@ -398,3 +398,28 @@ def remove_from_admins(request):
         payload['response'] = 'You must be authenticated to add new admins.'
     
     return HttpResponse(json.dumps(payload))
+
+def leave_group(request):
+    """
+    Leave given group
+    """
+    user = request.user
+    payload = {}
+
+    if user.is_authenticated and request.method == 'POST':
+        group_id = request.POST.get('group_id')
+        # check if group exist
+        try:
+            group = GroupChatRoom.objects.get(id=int(group_id))
+            # Check if user is not the owner (Owner cannot leave his own group)
+            if group.is_owner(user):
+                payload['response'] = 'You cannot leave your own group.'
+            else:
+                group.remove_user(user)
+                group.remove_admin(user)
+                payload['response'] = 'User removed.'
+        except GroupChatRoom.DoesNotExist:
+            payload['response'] = 'Group with given ID does not exist.'
+    else:
+        payload['response'] = 'You must be authenticated to lave this group.'
+    return HttpResponse(json.dumps(payload))

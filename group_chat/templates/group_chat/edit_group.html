@@ -59,7 +59,7 @@
                     <h3 style="display: inline-block;">Group name: </h3> <h3 style="display: inline-block;" id="group-name">{{group_title}}</h3> <span class="material-icons edit-button" title="Edit" id="edit-name-button" onclick="trigerReplaceTitle()">edit_square</span>
                 </div>
                 <h4>Owner: {{owner}}</h4>
-                <button type="button" class="btn btn-danger btn-md" id="leave-group-button" >
+                <button type="button" class="btn btn-danger btn-md" id="leave-group-button" onclick="confirmLeaveGroup()">
                     Leave group
                 </button>
             </div>
@@ -212,6 +212,7 @@
 {% include 'group_chat/snippets/remove_friend_from_group.html' %}
 {% include 'group_chat/snippets/promote_user_to_admin.html' %}
 {% include 'group_chat/snippets/remove_from_admins.html' %}
+{% include 'group_chat/snippets/leave_group.html' %}
 
 <script type="text/javaScript">
 
