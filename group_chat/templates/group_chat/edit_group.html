@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    .username-span{
+		font-weight: 600;
+		margin-top: 0px;
+		margin-bottom: auto;
+		margin-left: 5px;
+		margin-right: 5px;
+	}
+    .username-span:hover{
+		cursor: pointer;
+	}
+    .friends-list-container{
+		max-height: 500px;
+		overflow-y: scroll;
+	}
+    .friend-container:hover{
+		background: var(--main-background-color);
+		cursor: pointer;
+	}
+    .edit-button:hover{
+        cursor: pointer;
+    }
+    #accept-button{
+        margin-left:5px;
+    }
+    #cancel-button{
+        margin-left: 5px;
+    }
+    #accept-button:hover{
+        cursor: pointer;
+    }
+    #cancel-button:hover{
+        cursor: pointer;
+    }
+	.profile-image-small{
+		width: 25px;
+		height: 25px;
+		margin-top: 0px;
+		margin-bottom: auto;
+		margin-right: 5px;
+	}
+	.profile-image-small:hover{
+		cursor: pointer;
+	}
+</style>
+
+<div class="container-fluid">
+	<div class="row" style="padding-top: 100px;">
+		<div class="col-md-4">
+		</div>
+		<div class="col-md-4">
+            <div style="margin-left: 80px;">
+                <div id="group-name-element">
+                    <h3 style="display: inline-block;">Group name: </h3> <h3 style="display: inline-block;" id="group-name">{{group_title}}</h3> <span class="material-icons edit-button" title="Edit" id="edit-name-button" onclick="trigerReplaceTitle()">edit_square</span>
+                </div>
+                <h4>Owner: {{owner}}</h4>
+                <button type="button" class="btn btn-danger btn-md" id="leave-group-button" >
+                    Leave group
+                </button>
+            </div>
+		</div>
+		<div class="col-md-4">
+		</div>
+	</div>
+    <div class="row" style="padding-top: 100px;">
+		<div class="col-md-1">
+		</div>
+		<div class="col-md-10">
+            <div class="row" style="min-height: 100px;">
+				<div class="col-md-4">
+                    <div class="col-sm-12 m-0 p-2">
+                        <div class="card">
+                            <div class="d-flex flex-row align-items-center card-header">
+                                <h3 >Add friends</h3>
+                            </div>
+                            <div class="card-body p-1">	
+                                <div class="d-flex flex-column friends-list-container ">
+                                    {% if friends %}
+                                        {% for friend in friends %}
+                                        <div class="d-flex flex-row p-2 friend-container flex-grow-1" >
+                                            <img class="profile-image-small rounded-circle img-fluid" id="id_friend_img_{{friend.id}}" src="{% static 'images/dummy-profile.png' %}" >
+                                            <div class="d-flex flex-column">
+                                                <span class="username-span">
+                                                    {{friend.username}}
+                                                </span>								
+                                            </div>
+                                            <div class="d-flex flex-column" style="margin-left: auto;">
+                                                <input id="{{friend.id}}" type="checkbox" >								
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p>You have no friends to add.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="add-friends-to-group-button" >
+                        Add to group
+                    </button>
+				</div>
+				<div class="col-md-4">
+                    <div class="col-sm-12 m-0 p-2">
+                        <div class="card">
+                            <div class="d-flex flex-row align-items-center card-header">
+                                <h3 >Group members</h3>
+                            </div>
+                            <div class="card-body p-1">	
+                                <div class="d-flex flex-column friends-list-container ">
+                                    {% for friend in group_friends %}
+                                    <div class="d-flex flex-row p-2 friend-container flex-grow-1" >
+                                        <img class="profile-image-small rounded-circle img-fluid" id="id_group_friend_img_{{friend.0.id}}" src="{% static 'images/dummy-profile.png' %}" >
+                                        <div class="d-flex flex-column">
+                                            <span class="username-span">
+                                                {{friend.0.username}}
+                                            </span>								
+                                        </div>
+                                        {% if friend.1 %}
+                                        <div class="d-flex flex-column" style="margin-left: auto;">
+                                            <p style="font-size: 12px; height: 5px;">Owner</p>
+                                        </div>
+                                        {% elif friend.0 == request.user%}
+                                        <div class="d-flex flex-column" style="margin-left: auto;">
+                                            <p style="font-size: 12px; height: 5px;">This is you</p>
+                                        </div>
+                                        {% elif friend.2 %}
+                                            {% if owner == request.user %}
+                                            <div class="d-flex flex-column" style="margin-left: auto;">
+                                                <input id="member{{friend.0.id}}" type="checkbox" >								
+                                            </div>
+                                            {% else %}
+                                            <div class="d-flex flex-column" style="margin-left: auto;">
+                                                <p style="font-size: 12px; height: 5px;">Admin</p>
+                                            </div>
+                                            {% endif %}
+                                        {% else %}
+                                        <div class="d-flex flex-column" style="margin-left: auto;">
+                                            <input id="member{{friend.0.id}}" type="checkbox" >								
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="remove-friends-from-group-button" >
+                        Remove from group
+                    </button>
+                    {% if owner == request.user%}
+                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="promote-user-to-admin-button" >
+                        Promote to admin
+                    </button>
+                    {% endif %}
+                    
+				</div>
+				<div class="col-md-4">
+                    <div class="col-sm-12 m-0 p-2">
+                        <div class="card">
+                            <div class="d-flex flex-row align-items-center card-header">
+                                <h3 >Admins</h3>
+                            </div>
+                            <div class="card-body p-1">	
+                                <div class="d-flex flex-column friends-list-container ">
+                                    {% for friend in admins %}
+                                    <div class="d-flex flex-row p-2 friend-container flex-grow-1" >
+                                        <img class="profile-image-small rounded-circle img-fluid" id="id_admin_img_{{friend.id}}" src="{% static 'images/dummy-profile.png' %}" >
+                                        <div class="d-flex flex-column">
+                                            <span class="username-span">
+                                                {{friend.username}}
+                                            </span>								
+                                        </div>
+                                        {% if owner == request.user %}
+                                            {% if owner == friend %}
+                                            <div class="d-flex flex-column" style="margin-left: auto;">
+                                                <p style="font-size: 12px; height: 5px;">This is you</p>
+                                            </div>
+                                            {% else %}
+                                            <div class="d-flex flex-column" style="margin-left: auto;">
+                                                <input type="checkbox" id="admin{{friend.id}}" >
+                                            </div>
+                                            {% endif %}
+                                        
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if owner == request.user %}
+                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="remove-from-admins-button" >
+                        Remove from admins
+                    </button>
+                    {% endif %}
+				</div>
+			</div>
+		</div>
+		<div class="col-md-1">
+		</div>
+	</div>
+</div>
+
+<script type="text/javaScript">
+
+    preloadImageTrigger()
+
+    function preloadImageTrigger(){
+        {% for friend in friends %}
+            preloadImage("{{friend.profile_image.url|safe}}", "id_friend_img_{{friend.id}}")
+        {% endfor %}
+        {% for friend in group_friends %}
+            preloadImage("{{friend.0.profile_image.url|safe}}", "id_group_friend_img_{{friend.0.id}}")
+        {% endfor %}
+        {% for friend in admins %}
+            preloadImage("{{friend.profile_image.url|safe}}", "id_admin_img_{{friend.id}}")
+        {% endfor %}
+    }
+</script>
+{% endblock %}
