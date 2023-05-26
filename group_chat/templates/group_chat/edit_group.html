@@ -82,7 +82,7 @@
                                 <div class="d-flex flex-column friends-list-container ">
                                     {% if friends %}
                                         {% for friend in friends %}
-                                        <div class="d-flex flex-row p-2 friend-container flex-grow-1" >
+                                        <div class="d-flex flex-row p-2 friend-container flex-grow-1" onclick="checkFriend('{{friend.id}}')">
                                             <img class="profile-image-small rounded-circle img-fluid" id="id_friend_img_{{friend.id}}" src="{% static 'images/dummy-profile.png' %}" >
                                             <div class="d-flex flex-column">
                                                 <span class="username-span">
@@ -90,7 +90,7 @@
                                                 </span>								
                                             </div>
                                             <div class="d-flex flex-column" style="margin-left: auto;">
-                                                <input id="{{friend.id}}" type="checkbox" >								
+                                                <input id="{{friend.id}}" type="checkbox" onclick="addOrRemoveSelectedUser('{{friend.id}}')">								
                                             </div>
                                         </div>
                                         {% endfor %}
@@ -101,7 +101,7 @@
                             </div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="add-friends-to-group-button" >
+                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="add-friends-to-group-button" onClick="addFriendToGroupTrigger()">
                         Add to group
                     </button>
 				</div>
@@ -208,6 +208,7 @@
 </div>
 
 {% include 'group_chat/snippets/edit_group_title.html' %}
+{% include 'group_chat/snippets/add_friend_to_group.html' %}
 
 <script type="text/javaScript">
 
@@ -295,7 +296,7 @@
         replaceTitle()
     }
 
-    function trigerRestoreTitle(params) {
+    function trigerRestoreTitle() {
         restoreTitle()
     }
 
@@ -304,6 +305,42 @@
     var new_title = document.getElementById("new-title-element").value;
     var group_id = "{{group_id}}"
     editGroupTitle(new_title, group_id, refreshFunction);
+    }
+
+    function checkFriend(user_id){
+    // Check or uncheck checkbox after user click on div with username
+    var user_check_box = document.getElementById(user_id)
+    if (user_check_box.checked){
+        user_check_box.click()
+    }else{
+        user_check_box.click()
+    }
+}
+    // Storage for users selected to add to group
+    var add_friends_selected_users = []
+
+    function addOrRemoveSelectedUser(user_id){
+    // Add user id to list, if user id already in list then remove it
+    var add_friends_button = document.getElementById("add-friends-to-group-button")
+    if (add_friends_selected_users.includes(user_id)){
+        let index = add_friends_selected_users.indexOf(user_id)
+        add_friends_selected_users.splice(index, 1);
+        console.log(add_friends_selected_users)
+    }else{
+        add_friends_selected_users.push(user_id);
+        console.log(add_friends_selected_users)
+    }
+    
+    // disable button if none of friends are selected
+    if (add_friends_selected_users.length == 0){
+        add_friends_button.classList.add("disabled")
+    }else{
+        add_friends_button.classList.remove("disabled")
+    }
+}
+
+function addFriendToGroupTrigger() {
+    addFriendToGroup("{{group_id}}", add_friends_selected_users.toString(), refreshFunction)
 }
 </script>
 {% endblock %}

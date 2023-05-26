@@ -1,0 +1,36 @@
+<script type="text/javascript">
+	function addFriendToGroup(group_id, selected_friends, refreshFunction){
+		payload = {
+			"csrfmiddlewaretoken": "{{ csrf_token }}",
+			"group_id": group_id,
+            "selected_friends": selected_friends
+		}
+		$.ajax({
+			type: 'POST',
+			dataType: "json",
+			url: "{% url 'group_chat:add-friend-to-group' %}",
+			data: payload,
+			timeout: 5000,
+			success: function(data) {
+				console.log("SUCCESS", data)
+				if(data['response'] == "Friends added."){
+					refreshFunction()
+				}
+				else if(data['response'] != null){
+					alert(data['response'])
+				}
+			},
+			error: function(data) {
+				console.error("ERROR...", data)
+				//alert("Something went wrong.")
+			},
+			complete: function(data){
+				
+			}
+		});
+	}
+
+    function refreshFunction(){
+        window.location.reload();
+    }
+</script>
