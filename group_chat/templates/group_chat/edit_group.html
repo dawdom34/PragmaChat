@@ -169,7 +169,7 @@
                             <div class="card-body p-1">	
                                 <div class="d-flex flex-column friends-list-container ">
                                     {% for friend in admins %}
-                                    <div class="d-flex flex-row p-2 friend-container flex-grow-1" >
+                                    <div class="d-flex flex-row p-2 friend-container flex-grow-1" onclick="checkFriend('admin{{friend.id}}')">
                                         <img class="profile-image-small rounded-circle img-fluid" id="id_admin_img_{{friend.id}}" src="{% static 'images/dummy-profile.png' %}" >
                                         <div class="d-flex flex-column">
                                             <span class="username-span">
@@ -183,7 +183,7 @@
                                             </div>
                                             {% else %}
                                             <div class="d-flex flex-column" style="margin-left: auto;">
-                                                <input type="checkbox" id="admin{{friend.id}}" >
+                                                <input type="checkbox" id="admin{{friend.id}}" onclick="addOrRemoveAdmin('{{friend.id}}')">
                                             </div>
                                             {% endif %}
                                         
@@ -195,7 +195,7 @@
                         </div>
                     </div>
                     {% if owner == request.user %}
-                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="remove-from-admins-button" >
+                    <button type="button" class="btn btn-primary disabled" style="margin-left: 9px;" id="remove-from-admins-button" onclick="removeFromAdminsTrigger()">
                         Remove from admins
                     </button>
                     {% endif %}
@@ -211,6 +211,7 @@
 {% include 'group_chat/snippets/add_friend_to_group.html' %}
 {% include 'group_chat/snippets/remove_friend_from_group.html' %}
 {% include 'group_chat/snippets/promote_user_to_admin.html' %}
+{% include 'group_chat/snippets/remove_from_admins.html' %}
 
 <script type="text/javaScript">
 

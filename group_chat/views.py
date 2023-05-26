@@ -354,3 +354,47 @@ def promote_to_admin(request):
         payload['response'] = 'You must be authenticated to add new admins.'
 
     return HttpResponse(json.dumps(payload))
+
+def remove_from_admins(request):
+    """
+    Remove user from admins list for given group
+    Activated by ajax function
+    """
+    user = request.user
+    payload = {}
+    
+    if user.is_authenticated and request.method == 'POST':
+        # Check if group exist
+        group_id = request.POST.get('group_id')
+        try:
+            group = GroupChatRoom.objects.get(id=int(group_id))
+            # Check if user have privileges to remove admins (Only owner can do this)
+            if group.is_owner(user):
+                # Check if selected users exist
+                users_id = [x for x in list(request.POST.get('users_id')) if x != ',']
+                users_valid = True
+                for x in users_id:
+                    try:
+                        acc = Account.objects.get(id=int(x))
+                        if group.owner == acc:
+                            users_valid = False
+                            payload['response'] = 'You cannot remove your self from admins.'
+                            break
+                    except Account.DoesNotExist:
+                        users_valid = False
+                        payload['response'] = 'One of selected users is not valid.'
+                        break
+                if users_valid:
+                    # Remove users from admin group
+                    for user in users_id:
+                        acc = Account.objects.get(id=int(user))
+                        group.remove_admin(acc)
+                    payload['response'] = 'Users removed.'
+            else:
+                payload['response'] = 'You have no privileges to remove admins.'
+        except GroupChatRoom.DoesNotExist:
+            payload['response'] = 'Group with given ID does not exist.'
+    else:
+        payload['response'] = 'You must be authenticated to add new admins.'
+    
+    return HttpResponse(json.dumps(payload))
