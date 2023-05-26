@@ -4,6 +4,6 @@ from .views import group_chat_room_view
 
 app_name = 'group_chat'
 
-urlpattterns = [
+urlpatterns = [
     path('', group_chat_room_view, name='group-chat-room'),
 ]
