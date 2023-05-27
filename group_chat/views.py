@@ -151,7 +151,7 @@ def edit_group_view(request, *args, **kwargs):
     try:
         group = GroupChatRoom.objects.get(id=group_id)
     except GroupChatRoom.DoesNotExist:
-        raise ValueError('Group does not exist')
+        return redirect('group_chat:group-chat-room')
     
     # Check if user is admin
     if not group.is_admin(user):
@@ -418,6 +418,36 @@ def leave_group(request):
                 group.remove_user(user)
                 group.remove_admin(user)
                 payload['response'] = 'User removed.'
+        except GroupChatRoom.DoesNotExist:
+            payload['response'] = 'Group with given ID does not exist.'
+    else:
+        payload['response'] = 'You must be authenticated to lave this group.'
+    return HttpResponse(json.dumps(payload))
+
+def delete_group(request):
+    """
+    Delete given group
+    """
+    user = request.user
+    payload = {}
+
+    if user.is_authenticated and request.method == 'POST':
+        group_id = request.POST.get('group_id')
+        confirmation_text = request.POST.get('confirmation_text')
+        # Check if group exist
+        try:
+            group = GroupChatRoom.objects.get(id=int(group_id))
+            # Check if user have privileges to delete group (Only owner can do this)
+            if group.is_owner(user):
+                # Check if confirmation text is valid
+                cf = f'Delete group {group.title}'
+                if confirmation_text == cf:
+                    group.delete()
+                    payload['response'] = 'Group deleted.'
+                else:
+                    payload['response'] = 'Confirmation text does not match'
+            else:
+                payload['response'] = 'You have not privileges to delete this group.'
         except GroupChatRoom.DoesNotExist:
             payload['response'] = 'Group with given ID does not exist.'
     else:

@@ -55,6 +55,7 @@
 		</div>
 		<div class="col-md-4">
             <div style="margin-left: 80px;">
+                
                 <div id="group-name-element">
                     <h3 style="display: inline-block;">Group name: </h3> <h3 style="display: inline-block;" id="group-name">{{group_title}}</h3> <span class="material-icons edit-button" title="Edit" id="edit-name-button" onclick="trigerReplaceTitle()">edit_square</span>
                 </div>
@@ -62,6 +63,23 @@
                 <button type="button" class="btn btn-danger btn-md" id="leave-group-button" onclick="confirmLeaveGroup()">
                     Leave group
                 </button>
+                {% if request.user == owner %}
+                <button type="button" class="btn btn-danger btn-md" id="delete-group-button" onclick="confirmDeleteGroup()">
+                    Delete group
+                </button>
+                {% endif %}
+                <!--Delete group alert-->
+                <div class="alert alert-dismissable alert-danger" id="delete-alert" style="margin-top: 50px; margin-left: -60px; display: none;">
+                    <button type="button" class="btn btn-danger btn-sm" aria-hidden="true" style="float: right;" onclick="alertHide()">
+                        ×
+                    </button>
+                    <h4>
+                        Warning!
+                    </h4> You have started the group <strong>deletion</strong> process, please rewrite the given sentence to confirm your action: 'Delete group {{group_title}}'<br>
+                    <input type="text" id="confirmation-text">
+                    <button type="button" class="btn btn-danger btn-md" onclick="deleteGroupTrigger()">Confirm</button>
+                </div>
+                <!--Delete group alert-->
             </div>
 		</div>
 		<div class="col-md-4">
@@ -213,6 +231,7 @@
 {% include 'group_chat/snippets/promote_user_to_admin.html' %}
 {% include 'group_chat/snippets/remove_from_admins.html' %}
 {% include 'group_chat/snippets/leave_group.html' %}
+{% include 'group_chat/snippets/delete_group.html' %}
 
 <script type="text/javaScript">
 
