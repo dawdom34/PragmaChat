@@ -9,7 +9,8 @@ from .views import (group_chat_room_view,
                     remove_friend_from_group,
                     promote_to_admin,
                     remove_from_admins,
-                    leave_group)
+                    leave_group,
+                    delete_group)
 
 app_name = 'group_chat'
 
@@ -24,4 +25,5 @@ urlpatterns = [
     path('promote_to_admin', promote_to_admin, name='promote-to-admin'),
     path('remove_from_admins', remove_from_admins, name='remove-from-admins'),
     path('leave_group/', leave_group, name='leave-group'),
+    path('delete_group/', delete_group, name='delete-group'),
 ]
