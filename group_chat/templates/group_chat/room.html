@@ -222,4 +222,110 @@
 	})
 </script>
 
+<!--WEBSOCKET-->
+<script type="text/javaScript">
+	var chatSocket = null;
+	var roomId = null;
+
+	onStart()
+
+	function onStart(){
+		{% if groups %}
+		const urlParams = new URLSearchParams(window.location.search)
+		const group_room_id = urlParams.get('room_id')
+		console.log('kwarg: ' + group_room_id)
+		if (group_room_id != null){
+			// User redirected from notification
+		}else{
+			// Connect with first group on the list
+		}
+		{% endif %}
+	}
+
+	function closeWebSocket(){
+		if(chatSocket != null){
+			chatSocket.close()
+			chatSocket = null
+		}
+	}
+
+	function setupWebSocket(room_id){
+
+		console.log("setupWebSocket: " + room_id)
+
+		roomId = room_id
+
+		// close previous socket if one is open
+		closeWebSocket()
+
+		// Correctly decide between ws:// and wss://
+		var ws_scheme = window.location.protocol == "https:" ? "wss" : "ws";
+		{% if debug_mode %}
+			var ws_path = ws_scheme + '://' + window.location.host + "/group_chat/" + roomId + "/"; // development
+		{% else %}
+			var ws_path = ws_scheme + '://' + window.location.host + ":8001/group_chat/" + roomId + "/"; // production
+		{% endif %}
+		
+		
+		// console.log("Connecting to " + ws_path);
+		chatSocket = new WebSocket(ws_path);
+
+		// Handle incoming messages
+		chatSocket.onmessage = function(message) {
+			// Decode the JSON
+			// console.log("Got chat websocket message " + message.data);
+			console.log("Got websocket message.");
+			var data = JSON.parse(message.data);
+
+			// display the progress bar?
+			displayChatroomLoadingSpinner(data.display_progress_bar)
+
+			// Handle errors (ClientError)
+			if (data.error) {
+				console.error(data.error + ": " + data.message)
+				return;
+			}
+			// Handle joining (Client perspective)
+			if (data.join) {
+				console.log("Joining room " + data.join);
+			}
+			// Handle leaving (client perspective)
+			if (data.leave) {
+				// do nothing
+				console.log("Leaving room " + data.leave);
+			}
+		};
+
+		chatSocket.addEventListener("open", function(e){
+			console.log("ChatSocket OPEN")
+			// join chat room
+			if("{{request.user.is_authenticated}}"){
+				chatSocket.send(JSON.stringify({
+					"command": "join",
+					"room": roomId
+				}));
+			}
+		})
+
+		chatSocket.onclose = function(e) {
+			console.log('Chat socket closed.');
+		};
+
+		chatSocket.onOpen = function(e){
+			console.log("ChatSocket onOpen", e)
+		}
+
+		chatSocket.onerror = function(e){
+	        console.log('ChatSocket error', e)
+	    }
+
+	    if (chatSocket.readyState == WebSocket.OPEN) {
+	    	console.log("ChatSocket OPEN")
+	    } else if (chatSocket.readyState == WebSocket.CONNECTING){
+	        console.log("ChatSocket connecting..")
+	    }
+	}
+
+</script>
+
 {% endblock content %}
