@@ -154,7 +154,7 @@
 							</div>
 						</div>
 						{% for x in groups %}
-						<div class="d-flex flex-row p-2 friend-container flex-grow-1" id="id_friend_container_{{x.0.id}}">
+						<div class="d-flex flex-row p-2 friend-container flex-grow-1" id="id_friend_container_{{x.0.id}}" onclick="selectGroup('{{x.0.id}}')">
 							{% if x.1 %}
                             <!--If user is admin of the group, he have access to manage panel of the group-->
 							<div class="d-flex flex-column">
@@ -233,13 +233,19 @@
 		{% if groups %}
 		const urlParams = new URLSearchParams(window.location.search)
 		const group_room_id = urlParams.get('room_id')
-		console.log('kwarg: ' + group_room_id)
+		// Check if room_id is specified in URL
 		if (group_room_id != null){
 			// User redirected from notification
+			selectGroup(group_room_id)
 		}else{
 			// Connect with first group on the list
+			selectGroup("{{groups.0.0.id}}")
 		}
 		{% endif %}
+	}
+
+	function selectGroup(groupId) {
+		setupWebSocket(groupId)
 	}
 
 	function closeWebSocket(){
