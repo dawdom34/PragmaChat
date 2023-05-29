@@ -92,7 +92,7 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 
 		# Instruct their client to finish opening the room
 		await self.send_json({
-			"join": str(room.id),
+			"join": str(group.id),
 		})
 
 
