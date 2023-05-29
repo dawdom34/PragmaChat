@@ -175,7 +175,7 @@
 								</span>								
 							</div>
 							<div class="d-flex flex-column" style="margin-left: auto;">
-								<a href="#"><span class="material-icons" style="color: black">
+								<a href="{% url 'group_chat:group-info' group_id=x.0.id %}"><span class="material-icons" style="color: black">
 									info
 								</span></a>						
 							</div>
@@ -346,6 +346,7 @@
 	function handleGroupInfoPayload(group_info) {
 		console.log("Got group title: " + group_info['group_title'])
 		document.getElementById('id_group_title').innerHTML = group_info['group_title']
+		document.getElementById("id_group_info_container").href = "{% url 'group_chat:group-info' group_id=2313213213241 %}".replace("2313213213241", group_info['group_id'])
 	}
 
 </script>

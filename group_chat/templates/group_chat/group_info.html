@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+
+<style>
+    .username-span{
+		font-weight: 600;
+		margin-top: 0px;
+		margin-bottom: auto;
+		margin-left: 5px;
+		margin-right: 5px;
+	}
+    .username-span:hover{
+		cursor: pointer;
+	}
+    .friends-list-container{
+		max-height: 500px;
+		overflow-y: scroll;
+	}
+    .friend-container:hover{
+		background: var(--main-background-color);
+		cursor: pointer;
+	}
+	.profile-image-small{
+		width: 25px;
+		height: 25px;
+		margin-top: 0px;
+		margin-bottom: auto;
+		margin-right: 5px;
+	}
+	.profile-image-small:hover{
+		cursor: pointer;
+	}
+</style>
+
+<div class="container-fluid">
+	<div class="row" style="padding-top: 100px;">
+		<div class="col-md-2">
+		</div>
+		<div class="col-md-8">
+            <div id="group-name-element">
+                <h3 style="display: inline-block;">Group name: {{group_name}}</h3>
+            </div>
+            <h4>Owner: {{owner}}</h4>
+            <button type="button" class="btn btn-danger btn-md" id="leave-group-button" onclick="confirmLeaveGroup()">
+				Leave group
+			</button>
+		</div>
+		<div class="col-md-2">
+		</div>
+	</div>
+    <div class="row" style="padding-top: 100px;">
+		<div class="col-md-3">
+		</div>
+		<div class="col-md-6">
+            <div class="col-sm-12 m-0 p-2">
+                <div class="card">
+                    <div class="d-flex flex-row align-items-center card-header">
+                        <h3>Group members</h3>
+                    </div>
+                    <div class="card-body p-1">	
+                        <div class="d-flex flex-column friends-list-container ">
+                            {% if members %}
+                                {% for member in members %}
+                                <a href="{% url 'users:view' user_id=member.0.id %}" style="text-decoration: none; color:black">
+                                    <div class="d-flex flex-row p-2 friend-container flex-grow-1">
+                                        <img class="profile-image-small rounded-circle img-fluid" id="id_member_img_{{member.0.id}}" src="{% static 'images/dummy-profile.png' %}" >
+                                        <div class="d-flex flex-column">
+                                            <span class="username-span">
+                                                {{member.0.username}}
+                                            </span>								
+                                        </div>
+                                        <div class="d-flex flex-column" style="margin-left: auto;">
+                                            {% if member.1 %}
+                                            <p style="font-size: 12px; height: 5px;">Owner</p>
+                                            {% elif member.2 %}
+                                            <p style="font-size: 12px; height: 5px;">Admin</p>
+                                            {% elif request.user == member.0 %}
+                                            <p style="font-size: 12px; height: 5px;">This is you</p>
+                                            {% endif %}					
+                                        </div>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            {% else %}
+                                <p>This group has no members.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+		</div>
+		<div class="col-md-3">
+		</div>
+	</div>
+</div>
+
+{% include 'group_chat/snippets/leave_group.html' %}
+
+<script type="text/javaScript">
+
+    // Preload images
+    preloadImageTriger()
+
+    function confirmLeaveGroup() {
+    let text = "Are you sure you want to leave this group?"
+    if (confirm(text) == true){
+        // Triger leave group function
+        leaveGroup("{{group_id}}", redirectFunction);
+    }else{
+        // Nothing
+        }
+    }
+
+    function preloadImageTriger() {
+        {% for member in members %}
+            preloadImage("{{member.0.profile_image.url|safe}}", "id_member_img_{{member.0.id}}")
+        {% endfor %}
+    }
+
+</script>
+{% endblock %}
