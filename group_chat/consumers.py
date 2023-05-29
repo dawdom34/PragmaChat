@@ -49,7 +49,7 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 					raise ClientError(422, "You can't send an empty message.")
 				await self.send_room(content['room'], content['message'])
 			elif command == "get_room_chat_messages":
-				roup = await get_group_or_error(content['room_id'], self.scope['user'])
+				group = await get_group_or_error(content['room_id'], self.scope['user'])
 				payload = await get_group_chat_messages(group, content['page_number'])
 				if payload != None:
 					payload = json.loads(payload)
