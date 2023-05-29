@@ -58,4 +58,18 @@ class LazyNotificationEncoder(Serializer):
 					"image_url": str(obj.content_object.get_other_user.profile_image.url)
 				}
 			})
+		if obj.get_content_object_type() == "UnreadGroupChatRoomMessages":
+			dump_object.update({'notification_type': obj.get_content_object_type()})
+			dump_object.update({'notification_id': str(obj.pk)})
+			dump_object.update({'verb': obj.verb})
+			dump_object.update({'natural_timestamp': str(naturaltime(obj.timestamp))})
+			dump_object.update({'timestamp': str(obj.timestamp)})
+			dump_object.update({
+				'actions': {
+					'redirect_url': str(obj.redirect_url),
+				},
+				"from": {
+					"title": str(obj.content_object.get_group_name),
+				}
+			})
 		return dump_object
