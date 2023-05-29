@@ -4,6 +4,8 @@ from channels.db import database_sync_to_async
 
 from .models import GroupChatRoom
 
+from chat.exceptions import ClientError
+
 import json
 
 
@@ -50,9 +52,9 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 					print(payload)
 					await self.send_group_info_payload(payload)
 				else:
-					raise Exception("Something went wrong retrieving the group details.")
-		except Exception as e:
-			pass
+					raise ClientError(204, "Something went wrong retrieving the group details.")
+		except ClientError as e:
+			await self.handle_client_error(e)
 
 	async def disconnect(self, code):
 		"""
@@ -138,7 +140,17 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		await self.send_json({
 			"group_info": group_info,
 		},)
-		print('sended')
+
+	async def handle_client_error(self, e):
+		"""
+		Called when a ClientError is raised.
+		Sends error data to UI
+		"""
+		errorData = {}
+		errorData['error'] = e.code
+		if e.message:
+			errorData['message'] = e.message
+			await self.send_json(errorData)
 
 
 		
@@ -152,10 +164,10 @@ def get_group_or_error(room_id, user):
 	try:
 		group = GroupChatRoom.objects.get(id=room_id)
 	except GroupChatRoom.DoesNotExist:
-		raise Exception("Invalid room")
+		raise ClientError("ROOM_INVALID", "Invalid room")
 	
 	if user not in group.users.all():
-		raise Exception("You do not have permissions to join this room.")
+		raise ClientError("ROOM_ACCESS_DENIED", "You do not have permissions to join this room.")
 	return group
 
 def get_group_info(group):

@@ -286,6 +286,7 @@
 			// Handle errors (ClientError)
 			if (data.error) {
 				console.error(data.error + ": " + data.message)
+				showClientErrorModal(data.message)
 				return;
 			}
 			// Handle joining (Client perspective)
@@ -347,6 +348,11 @@
 		console.log("Got group title: " + group_info['group_title'])
 		document.getElementById('id_group_title').innerHTML = group_info['group_title']
 		document.getElementById("id_group_info_container").href = "{% url 'group_chat:group-info' group_id=2313213213241 %}".replace("2313213213241", group_info['group_id'])
+	}
+
+	function showClientErrorModal(message){
+		document.getElementById("id_client_error_modal_body").innerHTML = message
+		document.getElementById("id_trigger_client_error_modal").click()
 	}
 
 </script>
