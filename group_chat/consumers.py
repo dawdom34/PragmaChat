@@ -5,11 +5,13 @@ from django.core.paginator import Paginator
 
 from channels.db import database_sync_to_async
 
-from .models import GroupChatRoom, GroupChatMessage
+from .models import GroupChatRoom, GroupChatMessage, UnreadGroupChatRoomMessages
 from .constants import *
 
 from chat.exceptions import ClientError
 from chat.utils import calculate_timestamp, RoomChatMessageEncoder
+
+from users.models import Account
 
 import json
 
@@ -92,6 +94,12 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		except ClientError as e:
 			return await self.handle_client_error(e)
 		
+		# Add user to 'connected_users' list
+		await connect_user(group, self.scope['user'])
+
+		# Reset unread messages count after user connects to the room
+		await on_user_connected(group, self.scope["user"])
+		
 		# Store that user is in the room
 		self.room_id = group.id
 
@@ -117,17 +125,9 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 
 		group = await get_group_or_error(room_id, self.scope['user'])
 
-		# Notify the group that someone left
-		await self.channel_layer.group_send(
-			group.group_name,
-			{
-				"type": "chat.leave",
-				"room_id": room_id,
-				"profile_image": self.scope["user"].profile_image.url,
-				"username": self.scope["user"].username,
-				"user_id": self.scope["user"].id,
-			}
-		)
+		# Remove user from "connected_users" list
+		await disconnect_user(group, self.scope["user"])
+
 		# Remove that we're in the room
 		self.room_id = None
 
@@ -309,3 +309,63 @@ def get_group_chat_messages(room, page_number):
 	except Exception as e:
 		print("EXCEPTION: " + str(e))
 		return None
+	
+@database_sync_to_async
+def connect_user(room, user):
+	"""
+	Add user to 'connected_users' list for a given room
+	"""
+	account = Account.objects.get(pk=user.id)
+	return room.connect_user(account)
+
+@database_sync_to_async
+def disconnect_user(room, user):
+	"""
+	Remove user from 'connected_users' list for a given room
+	"""
+	# remove from connected_users list
+	account = Account.objects.get(pk=user.id)
+	return room.disconnect_user(account)
+
+@database_sync_to_async
+def append_unread_msg_if_not_connected(room, user, connected_users, message, from_user):
+	"""
+	Increment 'unread messages' if user is not connected to the group chat
+	"""
+	if not user in connected_users:
+		try:
+			unread_msgs = UnreadGroupChatRoomMessages.objects.get(room=room, user=user)
+			unread_msgs.most_recent_message = f'{from_user}: {message}'
+			unread_msgs.count += 1
+			unread_msgs.save()
+		except UnreadGroupChatRoomMessages.DoesNotExist:
+			UnreadGroupChatRoomMessages(room=room, user=user, count=1).save()
+			pass
+
+	return
+
+@database_sync_to_async
+def on_user_connected(room, user):
+	"""
+	Reset unread message count if user connects to the group chat
+	"""
+	# confirm they are in the connected users list
+	connected_users = room.connected_users.all()
+	if user in connected_users:
+		try:
+			# reset count
+			unread_msgs = UnreadGroupChatRoomMessages.objects.get(room=room, user=user)
+			unread_msgs.count = 0
+			unread_msgs.save()
+		except UnreadGroupChatRoomMessages.DoesNotExist:
+			UnreadGroupChatRoomMessages(room=room, user=user).save()
+			pass
+	return
+
+@database_sync_to_async
+def get_connected_users(room):
+	"""
+	Get 'connected_users' list for a given room
+	"""
+	connected_users = room.connected_users.all()
+	return connected_users
