@@ -153,7 +153,7 @@
 							</div>
 						</div>
 						{% for x in groups %}
-						<div class="d-flex flex-row p-2 friend-container flex-grow-1" id="id_friend_container_{{x.0.id}}" onclick="selectGroup('{{x.0.id}}')">
+						<div class="d-flex flex-row p-2 friend-container flex-grow-1" id="id_group_container_{{x.0.id}}" onclick="selectGroup('{{x.0.id}}')">
 							{% if x.1 %}
                             <!--If user is admin of the group, he have access to manage panel of the group-->
 							<div class="d-flex flex-column">
@@ -245,6 +245,8 @@
 
 	function selectGroup(groupId) {
 		setupWebSocket(groupId)
+		clearHighlightedGroup()
+		highlightgroup(groupId)
 	}
 
 	function closeWebSocket(){
@@ -558,6 +560,20 @@
 		else{
 			spinner.style.display = "none"
 		}
+	}
+
+	function highlightgroup(groupId){
+		// Highlight selected group
+		document.getElementById("id_group_container_" + groupId).style.background = "#f2f2f2"
+	}
+
+	function clearHighlightedGroup(){
+		// Clear highlight group
+		{% if groups %}
+			{% for x in groups %}
+				document.getElementById("id_group_container_{{x.0.id}}").style.background = ""
+			{% endfor %}
+		{% endif %}
 	}
 
 </script>
