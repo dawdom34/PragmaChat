@@ -1,6 +1,7 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from django.utils import timezone
+from django.core.paginator import Paginator
 
 from channels.db import database_sync_to_async
 
@@ -8,7 +9,7 @@ from .models import GroupChatRoom, GroupChatMessage
 from .constants import *
 
 from chat.exceptions import ClientError
-from chat.utils import calculate_timestamp
+from chat.utils import calculate_timestamp, RoomChatMessageEncoder
 
 import json
 
@@ -48,7 +49,13 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 					raise ClientError(422, "You can't send an empty message.")
 				await self.send_room(content['room'], content['message'])
 			elif command == "get_room_chat_messages":
-				pass
+				roup = await get_group_or_error(content['room_id'], self.scope['user'])
+				payload = await get_group_chat_messages(group, content['page_number'])
+				if payload != None:
+					payload = json.loads(payload)
+					await self.send_messages_payload(payload['messages'], payload['new_page_number'])
+				else:
+					raise ClientError(204,"Something went wrong retrieving the chatroom messages.")
 			elif command == "get_group_info":
 				group = await get_group_or_error(content['room_id'], self.scope['user'])
 				payload = get_group_info(group)
@@ -199,6 +206,13 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		Send a payload of messages to the ui
 		"""
 		print("GroupChatConsumer: send_messages_payload. ")
+		await self.send_json(
+			{
+				"messages_payload": "messages_payload",
+				"messages": messages,
+				"new_page_number": new_page_number,
+			},
+		)
 
 	async def display_progress_bar(self, is_displayed):
 		"""
@@ -262,3 +276,27 @@ def create_room_chat_message(room, user, message):
 	Create chat message to specific room
 	"""
 	return GroupChatMessage.objects.create(user=user, room=room, content=message)
+
+@database_sync_to_async
+def get_group_chat_messages(room, page_number):
+	"""
+	Get chat messages from specific room with pagination
+	"""
+	try:
+		qs = GroupChatMessage.objects.by_room(room)
+		p = Paginator(qs, DEFAULT_ROOM_CHAT_MESSAGE_PAGE_SIZE)
+
+		payload = {}
+		messages_data = None
+		new_page_number = int(page_number)  
+		if new_page_number <= p.num_pages:
+			new_page_number = new_page_number + 1
+			s = RoomChatMessageEncoder()
+			payload['messages'] = s.serialize(p.page(page_number).object_list)
+		else:
+			payload['messages'] = "None"
+		payload['new_page_number'] = new_page_number
+		return json.dumps(payload)
+	except Exception as e:
+		print("EXCEPTION: " + str(e))
+		return None
