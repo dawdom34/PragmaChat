@@ -49,6 +49,7 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 					raise ClientError(422, "You can't send an empty message.")
 				await self.send_room(content['room'], content['message'])
 			elif command == "get_room_chat_messages":
+				await self.display_progress_bar(True)
 				group = await get_group_or_error(content['room_id'], self.scope['user'])
 				payload = await get_group_chat_messages(group, content['page_number'])
 				if payload != None:
@@ -56,7 +57,9 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 					await self.send_messages_payload(payload['messages'], payload['new_page_number'])
 				else:
 					raise ClientError(204,"Something went wrong retrieving the chatroom messages.")
+				await self.display_progress_bar(False)
 			elif command == "get_group_info":
+				await self.display_progress_bar(True)
 				group = await get_group_or_error(content['room_id'], self.scope['user'])
 				payload = get_group_info(group)
 				print(payload)
@@ -66,6 +69,7 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 					await self.send_group_info_payload(payload)
 				else:
 					raise ClientError(204, "Something went wrong retrieving the group details.")
+				await self.display_progress_bar(False)
 		except ClientError as e:
 			await self.handle_client_error(e)
 
@@ -222,6 +226,11 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 			- Hide the progress bar on UI
 		"""
 		print("DISPLAY PROGRESS BAR: " + str(is_displayed))
+		await self.send_json(
+			{
+				"display_progress_bar": is_displayed
+			}
+		)
 
 	async def send_group_info_payload(self, group_info):
 		"""
