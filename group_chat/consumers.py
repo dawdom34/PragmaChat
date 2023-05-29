@@ -31,9 +31,10 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		# Messages will have a "command" key we can switch on
 		print("GroupChatConsumer: receive_json")
 		command = content.get("command", None)
+		print(command)
 		try:
 			if command == "join":
-				pass
+				await self.join_room(content["room"])
 			elif command == "leave":
 				pass
 			elif command == "send":
@@ -43,9 +44,11 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 			elif command == "get_group_info":
 				group = await get_group_or_error(content['room_id'], self.scope['user'])
 				payload = get_group_info(group)
+				print(payload)
 				if payload != None:
 					payload = json.loads(payload)
-					await self.send_group_info_payload(payload['user_info'])
+					print(payload)
+					await self.send_group_info_payload(payload)
 				else:
 					raise Exception("Something went wrong retrieving the group details.")
 		except Exception as e:
@@ -65,6 +68,15 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		"""
 		# The logged-in user is in our scope thanks to the authentication ASGI middleware (AuthMiddlewareStack)
 		print("GroupChatConsumer: join_room: " + str(room_id))
+		try:
+			room = await get_group_or_error(room_id, self.scope["user"])
+		except Exception as e:
+			return
+		# Instruct their client to finish opening the room
+		await self.send_json({
+			"join": str(room.id),
+		})
+
 
 
 	async def leave_room(self, room_id):
@@ -109,12 +121,6 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		"""
 		print("GroupChatConsumer: send_messages_payload. ")
 
-	async def send_user_info_payload(self, user_info):
-		"""
-		Send a payload of user information to the ui
-		"""
-		print("GroupChatConsumer: send_user_info_payload. ")
-
 	async def display_progress_bar(self, is_displayed):
 		"""
 		1. is_displayed = True
@@ -132,6 +138,11 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		await self.send_json({
 			"group_info": group_info,
 		},)
+		print('sended')
+
+
+		
+
 @database_sync_to_async
 def get_group_or_error(room_id, user):
 	"""
