@@ -1,10 +1,14 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
+from django.utils import timezone
+
 from channels.db import database_sync_to_async
 
-from .models import GroupChatRoom
+from .models import GroupChatRoom, GroupChatMessage
+from .constants import *
 
 from chat.exceptions import ClientError
+from chat.utils import calculate_timestamp
 
 import json
 
@@ -38,9 +42,11 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 			if command == "join":
 				await self.join_room(content["room"])
 			elif command == "leave":
-				pass
+				await self.leave_room(content['room'])
 			elif command == "send":
-				pass
+				if len(content['message'].lstrip()) == 0:
+					raise ClientError(422, "You can't send an empty message.")
+				await self.send_room(content['room'], content['message'])
 			elif command == "get_room_chat_messages":
 				pass
 			elif command == "get_group_info":
@@ -71,9 +77,19 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		# The logged-in user is in our scope thanks to the authentication ASGI middleware (AuthMiddlewareStack)
 		print("GroupChatConsumer: join_room: " + str(room_id))
 		try:
-			room = await get_group_or_error(room_id, self.scope["user"])
-		except Exception as e:
-			return
+			group = await get_group_or_error(room_id, self.scope["user"])
+		except ClientError as e:
+			return await self.handle_client_error(e)
+		
+		# Store that user is in the room
+		self.room_id = group.id
+
+		#  Add user to the group so he can  get room messages 
+		await self.channel_layer.group_add(
+			group.group_name,
+			self.channel_name
+		)
+
 		# Instruct their client to finish opening the room
 		await self.send_json({
 			"join": str(room.id),
@@ -88,12 +104,61 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		# The logged-in user is in our scope thanks to the authentication ASGI middleware
 		print("GroupChatConsumer: leave_room")
 
+		group = await get_group_or_error(room_id, self.scope['user'])
+
+		# Notify the group that someone left
+		await self.channel_layer.group_send(
+			group.group_name,
+			{
+				"type": "chat.leave",
+				"room_id": room_id,
+				"profile_image": self.scope["user"].profile_image.url,
+				"username": self.scope["user"].username,
+				"user_id": self.scope["user"].id,
+			}
+		)
+		# Remove that we're in the room
+		self.room_id = None
+
+		# Remove them from the group so they no longer get room messages
+		await self.channel_layer.group_discard(
+			group.group_name,
+			self.channel_name,
+		)
+		# Instruct their client to finish closing the room
+		await self.send_json({
+			"leave": str(group.id),
+		})
+
 
 	async def send_room(self, room_id, message):
 		"""
 		Called by receive_json when someone sends a message to a room.
 		"""
 		print("GroupChatConsumer: send_room")
+		# Check they are in this room
+		if self.room_id != None:
+			if str(room_id) != str(self.room_id):
+				raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
+			else:
+				pass
+
+		# Get the room and send to the group about it
+		group = await get_group_or_error(room_id, self.scope["user"])
+
+		# Create group chat message obj in database
+		await create_room_chat_message(group, self.scope["user"], message)
+
+		await self.channel_layer.group_send(
+			group.group_name,
+			{
+				"type": "chat.message",
+				"profile_image": self.scope["user"].profile_image.url,
+				"username": self.scope["user"].username,
+				"user_id": self.scope["user"].id,
+				"message": message,
+			}
+		)
 
 	# These helper methods are named by the types we send - so chat.join becomes chat_join
 	async def chat_join(self, event):
@@ -116,6 +181,18 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		"""
 		# Send a message down to the client
 		print("GroupChatConsumer: chat_message")
+		timestamp = calculate_timestamp(timezone.now())
+
+		await self.send_json(
+			{
+				"msg_type": MSG_TYPE_MESSAGE,
+				"username": event["username"],
+				"user_id": event["user_id"],
+				"profile_image": event["profile_image"],
+				"message": event["message"],
+				"natural_timestamp": timestamp,
+			},
+		)
 
 	async def send_messages_payload(self, messages, new_page_number):
 		"""
@@ -178,3 +255,10 @@ def get_group_info(group):
 	payload['group_id'] = group.id
 	payload['group_title'] = group.title
 	return json.dumps(payload)
+
+@database_sync_to_async
+def create_room_chat_message(room, user, message):
+	"""
+	Create chat message to specific room
+	"""
+	return GroupChatMessage.objects.create(user=user, room=room, content=message)
