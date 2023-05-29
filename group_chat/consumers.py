@@ -157,8 +157,17 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		# Get the room and send to the group about it
 		group = await get_group_or_error(room_id, self.scope["user"])
 
+		# Get the list of connected users
+		connected_users = await get_connected_users(group)
+
 		# Create group chat message obj in database
-		await create_room_chat_message(group, self.scope["user"], message)
+		msg = await create_room_chat_message(group, self.scope["user"], message)
+		
+		"""
+		Create an unread message for each user who is currently not connected to the chat
+		"""
+		for user in group.users.all():
+			await append_unread_msg_if_not_connected(group, user, connected_users, message, msg.user.username)
 
 		await self.channel_layer.group_send(
 			group.group_name,
