@@ -10,7 +10,8 @@ from .views import (group_chat_room_view,
                     promote_to_admin,
                     remove_from_admins,
                     leave_group,
-                    delete_group)
+                    delete_group,
+                    group_info)
 
 app_name = 'group_chat'
 
@@ -26,4 +27,5 @@ urlpatterns = [
     path('remove_from_admins', remove_from_admins, name='remove-from-admins'),
     path('leave_group/', leave_group, name='leave-group'),
     path('delete_group/', delete_group, name='delete-group'),
+    path('group_info/<group_id>/', group_info, name='group-info')
 ]

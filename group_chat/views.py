@@ -453,3 +453,31 @@ def delete_group(request):
     else:
         payload['response'] = 'You must be authenticated to lave this group.'
     return HttpResponse(json.dumps(payload))
+
+def group_info(request, *args, **kwargs):
+    """
+    Display basic information about the group
+    Available from the normal user level
+    """
+    user = request.user
+    context = {}
+    group_id = kwargs.get('group_id')
+
+    if not user.is_authenticated:
+        return redirect('login')
+    
+    # Check if group exist
+    try:
+        group = GroupChatRoom.objects.get(id=group_id)
+    except GroupChatRoom.DoesNotExist:
+        return ValueError('Group does not exist')
+    
+    # Combine group members with their roles inside group
+    members = [(x, group.is_owner(x), group.is_admin(x)) for x in group.users.all()]
+
+    context['members'] = members
+    context['group_name'] = group.title
+    context['owner'] = group.owner
+    context['group_id'] = group.id
+
+    return render(request, 'group_chat/group_info.html', context)
