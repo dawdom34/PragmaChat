@@ -283,9 +283,6 @@
 			console.log("Got websocket message.");
 			var data = JSON.parse(message.data);
 
-			// display the progress bar?
-			displayChatroomLoadingSpinner(data.display_progress_bar)
-
 			// Handle errors (ClientError)
 			if (data.error) {
 				console.error(data.error + ": " + data.message)
@@ -294,11 +291,17 @@
 			// Handle joining (Client perspective)
 			if (data.join) {
 				console.log("Joining room " + data.join);
+				getGroupInfo()
 			}
 			// Handle leaving (client perspective)
 			if (data.leave) {
 				// do nothing
 				console.log("Leaving room " + data.leave);
+			}
+			// Handle group info comming from backend
+			if (data.group_info) {
+				console.log('Got group info payload')
+				handleGroupInfoPayload(data.group_info)
 			}
 		};
 
@@ -330,6 +333,19 @@
 	    } else if (chatSocket.readyState == WebSocket.CONNECTING){
 	        console.log("ChatSocket connecting..")
 	    }
+	}
+
+	function getGroupInfo() {
+		console.log('getgroupinfo')
+		chatSocket.send(JSON.stringify({
+			"command": "get_group_info",
+			"room_id": roomId,
+		}))
+	}
+
+	function handleGroupInfoPayload(group_info) {
+		console.log("Got group title: " + group_info['group_title'])
+		document.getElementById('id_group_title').innerHTML = group_info['group_title']
 	}
 
 </script>
