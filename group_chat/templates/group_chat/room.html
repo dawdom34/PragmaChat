@@ -252,6 +252,8 @@
 		if(chatSocket != null){
 			chatSocket.close()
 			chatSocket = null
+			clearChatLog()
+			setPageNumber("1")
 		}
 	}
 
