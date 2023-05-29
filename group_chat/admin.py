@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.core.paginator import Paginator
 from django.core.cache import cache
-from .models import GroupChatMessage, GroupChatRoom
+from .models import GroupChatMessage, GroupChatRoom, UnreadGroupChatRoomMessages
 
 
 class GroupChatRoomAdmin(admin.ModelAdmin):
@@ -54,3 +54,13 @@ class GroupChatMessageAdmin(admin.ModelAdmin):
 
 
 admin.site.register(GroupChatMessage, GroupChatMessageAdmin)
+
+class UnreadGroupChatRoomMessagesAdmin(admin.ModelAdmin):
+    list_display = ['room', 'user', 'count']
+    search_fields = []
+    readonly_fields = ['id']
+
+    class Meta:
+        model = UnreadGroupChatRoomMessages
+
+admin.site.register(UnreadGroupChatRoomMessages, UnreadGroupChatRoomMessagesAdmin)

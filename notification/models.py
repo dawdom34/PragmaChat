@@ -36,3 +36,37 @@ class Notification(models.Model):
 
 	def get_content_object_type(self):
 		return str(self.content_object.get_cname)
+
+
+class GroupNotification(models.Model):
+
+    # Who the notification is sent to
+    target = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    # The group that triggered creation of notification
+    from_group = models.CharField(max_length=255)
+    
+    # URL to redirect at the specific application part (ex: group chat)
+    redirect_url = models.URLField(max_length=500, null=True, unique=False, blank=True)
+
+    # Statement to describe the notification (ex: user: how are you?)
+    verb = models.CharField(max_length=255, unique=False, blank=True, null=True)
+
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    # Tracking if user seen the notification, default = Not read yet
+    read = models.BooleanField(default=False)
+
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+
+    # Saving pk of the row of the table we are pointing to
+    object_id = models.PositiveIntegerField()
+
+    content_object = GenericForeignKey()
+
+    def __str__(self):
+        return self.verb
+
+    def get_content_object_type(self):
+        # Return name of the table
+        return str(self.content_object.get_cname)
