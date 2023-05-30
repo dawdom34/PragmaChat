@@ -10,10 +10,12 @@ from friend.models import FriendRequest, FriendList
 
 from notification.utils import LazyNotificationEncoder
 from notification.constants import *
-from notification.models import Notification
+from notification.models import Notification, GroupNotification
 
 from chat.exceptions import ClientError
 from chat.models import UnreadChatRoomMessages
+
+from group_chat.models import UnreadGroupChatRoomMessages
 
 import json
 from datetime import datetime
@@ -52,8 +54,9 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 		for us and pass it as the first argument.
 		"""
 		command = content.get("command", None)
-		print("NotificationConsumer: receive_json. Command: " + command)
+		#print("NotificationConsumer: receive_json. Command: " + command)
 		try:
+			# GENERAL NOTIFICATIONS
 			if command == "get_general_notifications":
 				payload = await get_general_notifications(self.scope["user"], content.get("page_number", None))
 				if payload == None:
@@ -96,6 +99,8 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 					await self.send_unread_general_notification_count(payload['count'])
 			elif command == "mark_notifications_read":
 				await mark_notifications_read(self.scope["user"])
+
+			# CHAT NOTIFICATIONS
 			elif command == "get_chat_notifications":
 				payload = await get_chat_notifications(self.scope["user"], content.get("page_number", None))
 				if payload == None:
@@ -117,6 +122,17 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 				except Exception as e:
 					print("UNREAD CHAT MESSAGE COUNT EXCEPTION: " + str(e))
 					pass
+
+			# GROUP CHAT NOTIFICATIONS
+			elif command == 'get_group_chat_notifications':
+				print(command)
+				payload = await get_group_chat_notifications(self.scope["user"], content.get("page_number", None))
+				if payload == None:
+					pass
+				else:
+					payload = json.loads(payload)
+					print(payload)
+					await self.send_group_chat_notifications_payload(payload['notifications'], payload['new_page_number'])
 		except Exception as e:
 			print("EXCEPTION: receive_json: " + str(e))
 			pass
@@ -245,6 +261,19 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 			{
 				"chat_msg_type": CHAT_MSG_TYPE_GET_UNREAD_NOTIFICATIONS_COUNT,
 				"count": count,
+			},
+		)
+
+	async def send_group_chat_notifications_payload(self, notifications, new_page_number):
+		"""
+		Called by receive_json when ready to send a json array of the group chat notifications
+		"""
+		print("NotificationConsumer: send_group_chat_notifications_payload")
+		await self.send_json(
+			{
+				"chat_msg_type": GROUP_CHAT_MSG_TYPE_NOTIFICATIONS_PAYLOAD,
+				"notifications": notifications,
+				"new_page_number": new_page_number,
 			},
 		)
 
@@ -460,3 +489,33 @@ def get_unread_chat_notification_count(user):
     else:
         raise ClientError("AUTH_ERROR", "User must be authenticated to get notifications.")
     return None
+
+@database_sync_to_async
+def get_group_chat_notifications(user, page_number):
+	"""
+	Get Group Chat Notifications with Pagination (next page of results).
+	This is for appending to the bottom of the notifications list.
+	Group Chat Notifications are:
+	1. UnreadGroupChatRoomMessages
+	"""
+	if user.is_authenticated:
+		groupchatmessage_ct = ContentType.objects.get_for_model(UnreadGroupChatRoomMessages)
+		notifications = GroupNotification.objects.filter(target=user, content_type=groupchatmessage_ct).order_by('-timestamp')
+		p = Paginator(notifications, DEFAULT_NOTIFICATION_PAGE_SIZE)
+
+		# sleep 1s for testing
+		# sleep(1)  
+		payload = {}
+		if len(notifications) > 0:
+			if int(page_number) <= p.num_pages:
+				s = LazyNotificationEncoder()
+				serialized_notifications = s.serialize(p.page(page_number).object_list)
+				payload['notifications'] = serialized_notifications
+				new_page_number = int(page_number) + 1
+				payload['new_page_number'] = new_page_number
+				return json.dumps(payload)
+		else:
+			return None
+	else:
+		raise ClientError("AUTH_ERROR", "User must be authenticated to get notifications.")
+	return None
