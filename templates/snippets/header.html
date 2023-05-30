@@ -245,6 +245,10 @@
 		if(data.chat_msg_type == 16){
 			handleGroupChatNotificationsData(data['notifications'], data['new_page_number'])
 		}
+		// refresh chat notifications
+		if(data.chat_msg_type == 17){
+			handleNewGroupChatNotificationsData(data['notifications'])
+		}
 
 	}
 
