@@ -22,6 +22,7 @@
 		width: 40px;
 		height: 40px;
 		background-color: var(--main-background-color);
+		margin-right: 10px;
 	}
 	.notifications-icon-container:hover {
 		cursor: pointer;
@@ -68,7 +69,16 @@
 				{% if request.user.is_authenticated %}
 					<div class="dropdown dropleft show p-2">
 						<div class="d-flex flex-row">
-
+							<!-- group chat notifications-->
+							<div class="btn-group dropleft">
+								<div class="d-flex notifications-icon-container rounded-circle align-items-center mr-4" id="id_group_chat_notification_dropdown_toggle" data-toggle="dropdown">
+									<span id="id_group_chat_notifications_count" class="notify-badge"></span>
+									<span class="d-flex material-icons notifications-material-icon m-auto align-items-center">groups</span>
+									<div class="dropdown-menu scrollable-menu" aria-labelledby="id_group_chat_notification_dropdown_toggle" id="id_group_chat_notifications_container">
+									</div>
+								</div>
+							</div>
+							<!--chat notifications-->
 							<div class="btn-group dropleft">
 								<div class="d-flex notifications-icon-container rounded-circle align-items-center mr-3" id="id_chat_notification_dropdown_toggle" data-toggle="dropdown">
 									<span id="id_chat_notifications_count" class="notify-badge"></span>
@@ -78,7 +88,7 @@
 									</div>
 								</div>
 							</div>
-
+							<!--geberal notifications-->
 							<div class="btn-group dropleft">
 								<div class="d-flex notifications-icon-container rounded-circle align-items-center mr-3" id="id_notification_dropdown_toggle" data-toggle="dropdown" onclick="setGeneralNotificationsAsRead()">
 									<span id="id_general_notifications_count" class="notify-badge"></span>
@@ -141,6 +151,7 @@
 
 {% include 'snippets/general_notifications.html' %}
 {% include 'snippets/chat_notifications.html' %}
+{% include 'snippets/group_chat_notifications.html' %}
 
 <script>
 
@@ -227,6 +238,14 @@
 			setChatNotificationsCount(data['count'])
 		}
 
+		/*
+			GROUP CHAT NOTIFICATIONS
+		*/
+		// new group chat notifications data payload
+		if(data.chat_msg_type == 16){
+			handleGroupChatNotificationsData(data['notifications'], data['new_page_number'])
+		}
+
 	}
 
 	notificationSocket.onclose = function(e) {
@@ -240,7 +259,10 @@
 		getUnreadGeneralNotificationsCount()
 
 		setupChatNotificationsMenu()
+		setupGroupChatNotificationsMenu()
+
 		getFirstChatNotificationsPage()
+		getFirstGroupChatNotificationsPage()
 	}
 
 	notificationSocket.onerror = function(e){

@@ -54,7 +54,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 		for us and pass it as the first argument.
 		"""
 		command = content.get("command", None)
-		print("NotificationConsumer: receive_json. Command: " + command)
+		#print("NotificationConsumer: receive_json. Command: " + command)
 		try:
 			# GENERAL NOTIFICATIONS
 			if command == "get_general_notifications":
@@ -125,11 +125,13 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 
 			# GROUP CHAT NOTIFICATIONS
 			elif command == 'get_group_chat_notifications':
+				print(command)
 				payload = await get_group_chat_notifications(self.scope["user"], content.get("page_number", None))
 				if payload == None:
 					pass
 				else:
 					payload = json.loads(payload)
+					print(payload)
 					await self.send_group_chat_notifications_payload(payload['notifications'], payload['new_page_number'])
 		except Exception as e:
 			print("EXCEPTION: receive_json: " + str(e))
