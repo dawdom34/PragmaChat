@@ -125,7 +125,6 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 
 			# GROUP CHAT NOTIFICATIONS
 			elif command == 'get_group_chat_notifications':
-				print(command)
 				payload = await get_group_chat_notifications(self.scope["user"], content.get("page_number", None))
 				if payload == None:
 					pass
