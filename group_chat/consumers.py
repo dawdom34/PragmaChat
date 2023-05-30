@@ -81,7 +81,11 @@ class GroupChatConsumer(AsyncJsonWebsocketConsumer):
 		"""
 		# Leave the room
 		print("GroupChatConsumer: disconnect")
-		pass
+		try:
+			if self.room_id != None:
+				await self.leave_room(self.room_id)
+		except Exception as e:
+			print("EXCEPTION: " + str(e))
 
 	async def join_room(self, room_id):
 		"""
