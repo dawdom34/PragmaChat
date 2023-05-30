@@ -26,4 +26,4 @@ CHAT_MSG_TYPE_GET_UNREAD_NOTIFICATIONS_COUNT = 14 # number of unread chat notifi
  	1. UnreadGroupChatMessages
 """
 GROUP_CHAT_MSG_TYPE_NOTIFICATIONS_PAYLOAD = 16 # New 'GroupChat' notifications data payload incoming
-GROUP_CHAT_MSG_TYPE_GET_NEW_NOTIFICATIONS = 13  # Get any new group chat notifications
+GROUP_CHAT_MSG_TYPE_GET_NEW_NOTIFICATIONS = 17  # Get any new group chat notifications
