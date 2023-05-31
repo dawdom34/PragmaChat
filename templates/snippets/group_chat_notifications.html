@@ -413,12 +413,38 @@
 		
 	}
 
+	function setGroupChatNotificationsCount(count){
+		var countElement = document.getElementById("id_group_chat_notifications_count")
+		if(count > 0){
+			countElement.style.background = "red"
+			countElement.style.display = "block"
+			countElement.innerHTML = count
+		}
+		else{
+			countElement.style.background = "transparent"
+			countElement.style.display = "none"
+		}
+	}
+
+	/*
+		Retrieve the number of unread group chat notifications. (This is the red dot in the notifications icon)
+		Called every GROUP_CHAT_NOTIFICATION_INTERVAL
+	*/
+	function getUnreadGroupChatNotificationsCount(){
+		if("{{request.user.is_authenticated}}"){
+			notificationSocket.send(JSON.stringify({
+				"command": "get_unread_group_chat_notifications_count",
+			}));
+		}
+	}
+
 	/*
 		Start the functions that will be executed constantly
 	*/
 	function startGroupChatNotificationService(){
 		if("{{request.user.is_authenticated}}" == "True"){
 			setInterval(getNewGroupChatNotifications, GROUP_CHAT_NOTIFICATION_INTERVAL)
+			setInterval(getUnreadGroupChatNotificationsCountm GROUP_CHAT_NOTIFICATION_INTERVAL)
 		}
 	}
 
