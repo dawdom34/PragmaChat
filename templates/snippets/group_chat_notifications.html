@@ -444,7 +444,7 @@
 	function startGroupChatNotificationService(){
 		if("{{request.user.is_authenticated}}" == "True"){
 			setInterval(getNewGroupChatNotifications, GROUP_CHAT_NOTIFICATION_INTERVAL)
-			setInterval(getUnreadGroupChatNotificationsCountm GROUP_CHAT_NOTIFICATION_INTERVAL)
+			setInterval(getUnreadGroupChatNotificationsCount, GROUP_CHAT_NOTIFICATION_INTERVAL)
 		}
 	}
 
