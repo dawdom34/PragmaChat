@@ -1,4 +1,96 @@
+{% load static %}
+
+<p class="d-none" id="id_group_chat_newest_timestamp"></p>
+
+<script src="{% static 'collections/collections.min.js' %}"></script>
+
 <script type="text/javaScript">
+
+	const GROUP_CHAT_NOTIFICATION_INTERVAL = 4000
+
+	// Keep track of what notifications are currently visible to the user.
+	var groupChatCachedNotifList = new List([])
+
+	/*
+		Append to top OR update a div that already exists.
+		Called by 'handleNewChatNotificationsData'
+	*/
+	function submitNewGroupChatNotificationToCache(notification){
+		var result = groupChatCachedNotifList.filter(function(n){ 
+			return n['notification_id'] === notification['notification_id']
+		})
+		// This notification does not already exist in the list
+		if(result.length == 0){
+			groupChatCachedNotifList.push(notification)
+
+			// append to top of list
+			appendTopGroupChatNotification(notification)
+		}
+		// This notification already exists in the list
+		else{
+			// find the div and update it.
+			refreshGroupChatNotificationsList(notification)
+		}
+	}
+
+	/*
+		Append to bottom. 
+		Used for
+			1. Page load
+			2. pagination
+			3. Refresh
+		Called by 'handleGroupChatNotificationsData' &  'refreshGroupChatNotificationsData'
+	*/
+	function submitGroupChatNotificationToCache(notification){
+		var result = groupChatCachedNotifList.filter(function(n){ 
+			return n['notification_id'] === notification['notification_id']
+		})
+		// This notification does not already exist in the list
+		if(result.length == 0){
+			groupChatCachedNotifList.push(notification)
+
+			// append to bottom of list
+			appendBottomGroupChatNotification(notification)
+		}
+		// This notification already exists in the list
+		else{
+			// find the div and update it.
+			refreshGroupChatNotificationsList(notification)
+		}
+	}
+
+	/*
+		Received a payload from socket containing NEW chat notifications
+		Called every GROUP_CHAT_NOTIFICATION_INTERVAL
+	*/
+	function handleNewGroupChatNotificationsData(notifications){
+		if(notifications.length > 0){
+			clearNoGroupChatNotificationsCard()
+			notifications.forEach(notification => {
+
+				submitNewGroupChatNotificationToCache(notification)
+
+				setGroupChatNewestTimestamp(notification['timestamp'])
+			})
+		}
+	}
+
+	/*
+		Keep track of the 'groupChat' newest notification in view. 
+		When 'getNewChatNotifications' is called, it retrieves all the notifications newer than this date.
+	*/
+	function setGroupChatNewestTimestamp(timestamp){
+		element = document.getElementById("id_group_chat_newest_timestamp")
+		current = element.innerHTML
+		if(Date.parse(timestamp) > Date.parse(current)){
+			element.innerHTML = timestamp
+		}
+		else if(current == "" || current == null || current == "undefined"){
+			element.innerHTML = timestamp
+		}
+	}
+
+
     /*
 		Add a header to the dropdown so users can visit /group_chat/
 	*/
@@ -129,6 +221,32 @@
 		return card
 	}
 
+	/*
+		Append a chat notification to the TOP of the list.
+	*/
+	function appendTopGroupChatNotification(notification){
+		switch(notification['notification_type']) {
+
+			case "UnreadGroupChatRoomMessages":
+				chatNotificationContainer = document.getElementById("id_group_chat_notifications_container")
+				card = createUnreadGroupChatRoomMessagesElement(notification)
+
+				if(chatNotificationContainer.childNodes.length > 2){
+					// Append as the SECOND child. First child is the "go to chatroom" button
+					var index = 2
+					chatNotificationContainer.insertBefore(card, chatNotificationContainer.childNodes[index]);
+				}
+				else {
+					chatNotificationContainer.appendChild(card)
+				}
+				
+				break;
+
+			default:
+				// code block
+		}
+	}
+
     /*
 		Append a chat notification to the BOTTOM of the list.
 	*/
@@ -159,14 +277,76 @@
 
             notifications.forEach(notification => {
 
-                appendBottomGroupChatNotification(notification)
+                submitGroupChatNotificationToCache(notification)
+				setGroupChatNewestTimestamp(notification['timestamp'])
 
             })
-            //setChatPageNumber(new_page_number)
+            
         }
-}
+	}
 
-function getFirstGroupChatNotificationsPage(){
+	/*
+		Search for the notification in the list using it's id. Then update its properties.
+		I do not update the image_url since that makes the notifications "flicker".
+	*/
+	function refreshGroupChatNotificationsList(notification){
+		notificationContainer = document.getElementById("id_group_chat_notifications_container")
+
+		if(notificationContainer != null){
+			divs = notificationContainer.childNodes
+
+			divs.forEach(function(card){
+				// card
+				if(card.id == ("id_group_notification_" + notification['notification_id'])){
+					
+					if(notification['notification_type'] == "UnreadGroupChatRoomMessages"){
+						refreshUnreadGroupChatRoomMessagesCard(card, notification)
+					}
+				}
+			})
+		}
+	}
+
+	/*
+		Refresh a refreshUnreadChatRoomMessagesCard card with current data
+	*/
+	function refreshUnreadGroupChatRoomMessagesCard(card, notification){
+
+		card.childNodes.forEach(function(element){
+
+			// DIV1
+			if(element.id == ("id_group_chat_div1_" + notification['notification_id'])){
+				element.childNodes.forEach(function(child){
+
+					// DIV2
+					if(child.id == ("id_group_chat_div2_" + notification['notification_id'])){
+						child.childNodes.forEach(function(nextChild){
+							if(nextChild.id == ("id_group_chat_title_" + notification['notification_id'])){
+								// found title
+								nextChild.innerHTML = notification['from']['title']
+							}
+							if(nextChild.id == ("id_group_chat_message_" + notification['notification_id'])){
+								// found chat message
+								if(notification['verb'].length > 50){
+									nextChild.innerHTML = notification['verb'].slice(0, 50) + "..."
+								}
+								else{
+									nextChild.innerHTML = notification['verb']
+								}
+							}
+						})
+					}
+				})
+			}
+
+			// TIMESTAMP
+			if (element.id == ("id_group_timestamp_" + notification['notification_id'])){
+				element.innerHTML = notification['natural_timestamp']
+			}
+		})
+	}
+
+	function getFirstGroupChatNotificationsPage(){
 		if("{{request.user.is_authenticated}}"){
 			notificationSocket.send(JSON.stringify({
 				"command": "get_group_chat_notifications",
@@ -174,6 +354,31 @@ function getFirstGroupChatNotificationsPage(){
 			}));
 		}
 	}
+
+	/*
+		Retrieve any new chat notifications
+		Called every GROUP_CHAT_NOTIFICATION_INTERVAL seconds
+	*/
+	function getNewGroupChatNotifications(){
+		newestTimestamp = document.getElementById("id_group_chat_newest_timestamp").innerHTML
+		if("{{request.user.is_authenticated}}"){
+			notificationSocket.send(JSON.stringify({
+				"command": "get_new_group_chat_notifications",
+				"newest_timestamp": newestTimestamp,
+			}));
+		}
+	}
+
+	/*
+		Start the functions that will be executed constantly
+	*/
+	function startGroupChatNotificationService(){
+		if("{{request.user.is_authenticated}}" == "True"){
+			setInterval(getNewGroupChatNotifications, GROUP_CHAT_NOTIFICATION_INTERVAL)
+		}
+	}
+
+	startGroupChatNotificationService()
 </script>
 
 <script type="text/javascript">
@@ -203,5 +408,14 @@ function getFirstGroupChatNotificationsPage(){
 	function assignGroupChatCardId(notification){
 		return "id_group_notification_" + notification['notification_id']
 	}
+
+	function setGroupChatInitialTimestamp(){
+		// ('%Y-%m-%d %H:%M:%S.%f')
+		var today = new Date();
+		var date = today.getFullYear() + "-01-01 01:00:00.000000"
+		document.getElementById("id_group_chat_newest_timestamp").innerHTML = date
+	}
+
+	setGroupChatInitialTimestamp()
 
 </script>
