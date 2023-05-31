@@ -127,7 +127,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 			elif command == 'get_group_chat_notifications':
 				payload = await get_group_chat_notifications(self.scope["user"], content.get("page_number", None))
 				if payload == None:
-					pass
+					await self.group_chat_pagination_exhausted()
 				else:
 					payload = json.loads(payload)
 					print(payload)
@@ -289,6 +289,17 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 			{
 				"chat_msg_type": GROUP_CHAT_MSG_TYPE_GET_NEW_NOTIFICATIONS,
 				"notifications": notifications,
+			},
+		)
+
+	async def group_chat_pagination_exhausted(self):
+		"""
+		Called by receive_json when pagination is exhausted for group chat notifications
+		"""
+		print("GroupChat Pagination DONE... No more notifications.")
+		await self.send_json(
+			{
+				"chat_msg_type": GROUP_CHAT_MSG_TYPE_PAGINATION_EXHAUSTED,
 			},
 		)
 
