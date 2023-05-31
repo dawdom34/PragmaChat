@@ -137,6 +137,15 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 				if payload != None:
 					payload = json.loads(payload)
 					await self.send_new_group_chat_notifications_payload(payload['notifications'])
+			elif command == "get_unread_group_chat_notifications_count":
+				try:
+					payload = await get_unread_group_chat_notification_count(self.scope["user"])
+					if payload != None:
+						payload = json.loads(payload)
+						await self.send_unread_group_chat_notification_count(payload['count'])
+				except Exception as e:
+					print("UNREAD GROUP CHAT MESSAGE COUNT EXCEPTION: " + str(e))
+					pass
 		except Exception as e:
 			print("EXCEPTION: receive_json: " + str(e))
 			pass
@@ -300,6 +309,17 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 		await self.send_json(
 			{
 				"chat_msg_type": GROUP_CHAT_MSG_TYPE_PAGINATION_EXHAUSTED,
+			},
+		)
+
+	async def send_unread_group_chat_notification_count(self, count):
+		"""
+		Send the number of unread "Groupchat" notifications to the template
+		"""
+		await self.send_json(
+			{
+				"chat_msg_type": GROUP_CHAT_MSG_TYPE_GET_UNREAD_NOTIFICATIONS_COUNT,
+				"count": count,
 			},
 		)
 
@@ -564,3 +584,22 @@ def get_new_group_chat_notifications(user, newest_timestamp):
 		raise ClientError("AUTH_ERROR", "User must be authenticated to get notifications.")
 
 	return None
+
+@database_sync_to_async
+def get_unread_group_chat_notification_count(user):
+    """
+	Get the number of group chat notifications
+	"""
+    payload = {}
+    if user.is_authenticated:
+        chatmessage_ct = ContentType.objects.get_for_model(UnreadGroupChatRoomMessages)
+        notifications = GroupNotification.objects.filter(target=user, content_type__in=[chatmessage_ct])
+        
+        unread_count = 0
+        if notifications:
+            unread_count = len(notifications.all())
+        payload['count'] = unread_count
+        return json.dumps(payload)
+    else:
+        raise ClientError("AUTH_ERROR", "User must be authenticated to get notifications.")
+    return None
