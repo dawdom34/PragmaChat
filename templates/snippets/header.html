@@ -253,6 +253,10 @@
 		if(data.chat_msg_type == 18){
 			setGroupChatPaginationExhausted()
 		}
+		// set group chat notifications count
+		if(data.chat_msg_type == 19){
+			setGroupChatNotificationsCount(data[['count']])
+		}
 
 	}
 
