@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from itertools import chain
 import json
 
-from .models import PrivateChatRoom, RoomChatMessage
+from .models import PrivateChatRoom
 
 from users.models import Account
 

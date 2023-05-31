@@ -367,6 +367,9 @@ def create_room_chat_message(room, user, message):
 
 @database_sync_to_async
 def get_room_chat_messages(room, page_number):
+	"""
+	Get chat messages for specific room with pagination
+	"""
 	try:
 		qs = RoomChatMessage.objects.by_room(room)
 		p = Paginator(qs, DEFAULT_ROOM_CHAT_MESSAGE_PAGE_SIZE)
@@ -400,9 +403,10 @@ def disconnect_user(room, user):
 	return room.disconnect_user(account)
 
 
-# If the user is not connected to the chat, increment "unread messages" count
+
 @database_sync_to_async
 def append_unread_msg_if_not_connected(room, user, connected_users, message):
+	# If the user is not connected to the chat, increment "unread messages" count
 	if not user in connected_users: 
 		try:
 			unread_msgs = UnreadChatRoomMessages.objects.get(room=room, user=user)
@@ -414,9 +418,10 @@ def append_unread_msg_if_not_connected(room, user, connected_users, message):
 			pass
 	return
 
-# When a user connects, reset their unread message count
+
 @database_sync_to_async
 def on_user_connected(room, user):
+	# When a user connects, reset their unread message count
 	# confirm they are in the connected users list
 	connected_users = room.connected_users.all()
 	if user in connected_users:
