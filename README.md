@@ -82,14 +82,14 @@ Different projects are based on other packages or their versions. Django provide
 2. Download app: `git clone https://github.com/dawdom34/PragmaChat.git`.
 3. Change directory to `PragmaChat`
 4. Now install all required packages `pip install -r requirements.txt`.
-5. Create migrations and apply them: `python manage.py makemigrations`, `python manage.py migrate`.
-6. Create superuser: `python manage.py createsuperuser`.
-7. Now it's time to configure the connection to the database created earlier, go to `PragmaChat/settings.py` and find the DATABASES section.
-8. Fill the variables with the values of the previously created user.
+5. Now it's time to configure the connection to the database created earlier, go to `PragmaChat/settings.py` and find the DATABASES section.
+6. Fill the variables with the values of the previously created user.
 
 ![db](https://github.com/dawdom34/PragmaChat/assets/79845962/98937d71-47cc-4247-96f9-f412e2474f84)
 
-8. Save the file.
-9. Run the server: `python manage.py runserver`
-10. Once the server is hosted, head over to http://127.0.0.1:8000/
+7. Save the file.
+8. Create migrations and apply them: `python manage.py makemigrations`, `python manage.py migrate`.
+9. Create superuser: `python manage.py createsuperuser`.
+10. Run the server: `python manage.py runserver`
+11. Once the server is hosted, head over to http://127.0.0.1:8000/
 
