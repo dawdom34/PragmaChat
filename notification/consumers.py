@@ -64,7 +64,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 				else:
 					payload = json.loads(payload)
 					await self.send_general_notifications_payload(payload['notifications'], payload['new_page_number'])
-			elif command == "get_new_general_notifications":
+			elif command == "get_new_general_notifications" and content.get('newest_timestamp') != '':
 				payload = await get_new_general_notifications(self.scope["user"], content.get("newest_timestamp", None))
 				if payload != None:
 					payload = json.loads(payload)
@@ -85,7 +85,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 				else:
 					payload = json.loads(payload)
 					await self.send_updated_friend_request_notification(payload['notification'])
-			elif command == "refresh_general_notifications":
+			elif command == "refresh_general_notifications" and content.get('newest_timestamp') != '':
 				payload = await refresh_general_notifications(self.scope["user"], content['oldest_timestamp'], content['newest_timestamp'])
 				if payload == None:
 					raise ClientError("Something went wrong. Try refreshing the browser.")
@@ -108,7 +108,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 				else:
 					payload = json.loads(payload)
 					await self.send_chat_notifications_payload(payload['notifications'], payload['new_page_number'])
-			elif command == "get_new_chat_notifications":
+			elif command == "get_new_chat_notifications" and content.get('newest_timestamp') != '':
 				payload = await get_new_chat_notifications(self.scope["user"], content.get("newest_timestamp", None))
 				if payload != None:
 					payload = json.loads(payload)
@@ -132,7 +132,7 @@ class NotificationConsumer(AsyncJsonWebsocketConsumer):
 					payload = json.loads(payload)
 					print(payload)
 					await self.send_group_chat_notifications_payload(payload['notifications'], payload['new_page_number'])
-			elif command == 'get_new_group_chat_notifications':
+			elif command == 'get_new_group_chat_notifications' and content.get('newest_timestamp') != '':
 				payload = await get_new_group_chat_notifications(self.scope["user"], content.get("newest_timestamp", None))
 				if payload != None:
 					payload = json.loads(payload)
