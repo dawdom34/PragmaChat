@@ -107,9 +107,9 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DB_NAME = 'pragma_chat_dev'
-DB_USER = 'pragma_chat_user'
-DB_PASSWORD = 'password'
+DB_NAME = ''
+DB_USER = ''
+DB_PASSWORD = ''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
