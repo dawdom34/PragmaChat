@@ -74,7 +74,7 @@ Memurai runs natively on Windows and it's designed to provide the reliability an
 ### Virtual enviroment setup
 Different projects are based on other packages or their versions. Django provides us with virtual environments that allow us to isolate individual projects and their packages from each other
 1. Open CMD and navigate to **Desktop**
-2. Create vierual enviroment: `python -m venv venv_name` (You can replace 'venv_name' with your own name)
+2. Create virtual enviroment: `virtualenv venv_name --python=python3.8.5` (You can replace 'venv_name' with your own name)
 3. Change directory to venv_name `cd venv_name` and activate virtual enviroment `Scripts\activate`.
 
 ### Project setup
