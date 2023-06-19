@@ -9,6 +9,8 @@ PragmaChat also offers features such as notifications about new messages, person
 
 PragmaChat is a perfect tool for people who want to have various possibilities to communicate and interact with other users in a flexible and intuitive way.
 
+DEMO: https://www.pragmachatdemo.online
+
 ## Features
 ### Personalized user profiles
 The user can change his data such as email or username, moreover, as part of privacy, he can choose whether he wants his email to be displayed publicly. Changing your profile picture is easy and fun with picture cropping
