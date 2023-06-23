@@ -15,40 +15,45 @@ DEMO: https://www.pragmachatdemo.online
 ### Personalized user profiles
 The user can change his data such as email or username, moreover, as part of privacy, he can choose whether he wants his email to be displayed publicly. Changing your profile picture is easy and fun with picture cropping
 
-![profile_edit](https://github.com/dawdom34/PragmaChat/assets/79845962/52165f0d-4e90-4737-a0f5-12e6c598e2a1)
+![profile_edit](https://github.com/dawdom34/PragmaChat/assets/79845962/14af1e73-ce24-483e-828e-665e1b2622f9)
+
 
 ### Searching for users
 You have the ability to find your friends by searching for users
 
 
-![friends_list](https://github.com/dawdom34/PragmaChat/assets/79845962/8c2f99f3-976e-43e9-ba7d-e8bb3a0749e7)
+![friends_list](https://github.com/dawdom34/PragmaChat/assets/79845962/71d88c76-c22e-4609-a770-56a93282dfe2)
+
 
 ### Private chat
 You can have private chats with your friends
 
 
-![private_chat](https://github.com/dawdom34/PragmaChat/assets/79845962/7e6c762c-2263-49e0-9f9d-02bec5c4b7df)
+![private_chat](https://github.com/dawdom34/PragmaChat/assets/79845962/e5688a48-54ca-4e54-b0ce-c33c2f70a408)
+
 
 ### Public chat
 Public chat is available for all users so you can meet new people
 
 
-![publicChatjpg](https://github.com/dawdom34/PragmaChat/assets/79845962/35828ac8-b9c7-467a-a844-2f5272fe52aa)
+![publicChatjpg](https://github.com/dawdom34/PragmaChat/assets/79845962/4567cfa8-d036-4841-a0d7-a36164510f22)
+
 
 ### Group chat
 You can create groups with selected users and stay in touch with the people you care about the most
 
 
-![groupChat](https://github.com/dawdom34/PragmaChat/assets/79845962/35aff825-2ac5-4cae-9740-35c9a32afed0)
+![groupChat](https://github.com/dawdom34/PragmaChat/assets/79845962/1eb951a2-7547-4cbb-a495-140830af747c)
+
 
 ### Notifications
 The application will inform you about a new message or activity of your friends, thanks to which you will be up to date
 
-![chat_notifications](https://github.com/dawdom34/PragmaChat/assets/79845962/8b1c504b-8647-4c3b-b43f-c4eea424c066)
+![chat_notifications](https://github.com/dawdom34/PragmaChat/assets/79845962/f3179c49-1c28-44fa-9860-326942dcb0a4)
 
-![general_notifications](https://github.com/dawdom34/PragmaChat/assets/79845962/77deec78-756e-4d99-8856-6e8fab897c77)
+![general_notifications](https://github.com/dawdom34/PragmaChat/assets/79845962/2284e3c6-7697-4f75-ade8-76de8d710709)
 
-![group_notifications](https://github.com/dawdom34/PragmaChat/assets/79845962/9a09e0ff-59a2-474a-ac90-f4209107a601)
+![group_notifications](https://github.com/dawdom34/PragmaChat/assets/79845962/202bb16d-ccba-43b5-a50a-44059038b28f)
 
 ## Setup (Windows)
 
@@ -87,7 +92,7 @@ Different projects are based on other packages or their versions. Django provide
 5. Now it's time to configure the connection to the database created earlier, go to `PragmaChat/settings.py` and find the DATABASES section.
 6. Fill the variables with the values of the previously created user.
 
-![db](https://github.com/dawdom34/PragmaChat/assets/79845962/98937d71-47cc-4247-96f9-f412e2474f84)
+![db](https://github.com/dawdom34/PragmaChat/assets/79845962/d04346fa-734a-4f3c-9921-a1ea48c98d8b)
 
 7. Save the file.
 8. Create migrations and apply them: `python manage.py makemigrations`, `python manage.py migrate`.
