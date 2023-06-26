@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'rest_framework',
     # Django channels
     'channels',
     # My apps
@@ -60,6 +61,7 @@ INSTALLED_APPS = [
     'chat',
     'group_chat',
     'notification',
+    'images_api',
 ]
 
 MIDDLEWARE = [
