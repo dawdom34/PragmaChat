@@ -72,6 +72,24 @@
 	.connected-users-icon:hover{
 		cursor: default;
 	}
+	#label-upload{
+		cursor: pointer; 
+		background-color: #007BFF; 
+		margin-left: 3px; 
+		margin-right: 3px;
+		height: 50px;
+		width: 55px;
+		border-radius: 8%;
+		margin-bottom: 0px;
+		padding-bottom: 0px;
+		padding-bottom: 0px;
+		margin-top: 0px;
+	}
+	#upload-icon{
+		color: white;
+		margin-left: 25%;
+		margin-top: 25%;
+	}
 
 </style>
 
@@ -101,8 +119,15 @@ PUBLIC CHAT
             <div class="d-flex chat-log" id="id_chat_log">
                 
             </div>
+			<div id="images-show">
+				<!--Placeholder for selected images-->
+			</div>
             <div class="d-flex chat-message-input-container">
-                <textarea class="flex-grow-1 chat-message-input" id="id_chat_message_input"></textarea>
+                <textarea class="flex-grow-1 chat-message-input" id="id_chat_message_input" style="width: 100%; height: 50px;"></textarea>
+				<label for="upload" id="label-upload"><span class="material-icons" id="upload-icon">
+					collections
+					</span></label>
+				<input type="file" id="upload" onchange="showImage(this);" style="opacity: 0; position: absolute; margin-left: 100%;">
                 <button class="btn btn-primary chat-message-submit-button">
                     <span id="id_chat_message_submit" class="material-icons">send
                     </span>
@@ -366,6 +391,62 @@ PUBLIC CHAT
 	function setConnectedUsersCount(count){
 		element = document.getElementById("id_connected_users")
 		element.innerHTML = count
+	}
+
+
+
+	function showImage(event){
+		// File input
+		let input = document.getElementById('upload')
+		// Div for showing uploaded image
+		let showImageDiv = document.getElementById('images-show')
+		// Create new img element
+		let imageElement = document.createElement('img')
+		// Create new div element
+		let clearElement = document.createElement('div')
+		// Clear all childs
+		showImageDiv.innerHTML = '';
+		if (event.files && event.files[0]){
+			let reader = new FileReader();
+			reader.onload = function(e){
+				imageElement.src = e.target.result;
+			};
+			reader.readAsDataURL(event.files[0])
+			// Style image
+			imageElement.style.height = '50px'
+			imageElement.style.width = '50px'
+			imageElement.style.marginLeft = '15px'
+			imageElement.style.marginTop = '15px'
+			imageElement.style.marginBottom = '15px'
+			// Append image to div
+			showImageDiv.appendChild(imageElement)
+
+			// Create span element for icon
+			spanElement = document.createElement('button')
+			spanElement.classList.add('btn-danger')
+			spanElement.classList.add('btn')
+			spanElement.classList.add('btn-sm')
+			spanElement.innerHTML = 'Discard image'
+			spanElement.addEventListener('click', clearInputFile)
+
+			// Append span element to div
+			clearElement.appendChild(spanElement)
+			clearElement.style.float = 'right'
+			clearElement.style.marginRight = '15px'
+			clearElement.style.marginTop = '15px'
+			clearElement.style.marginBottom = '15px'
+
+			// Append child
+			showImageDiv.appendChild(clearElement)
+		}
+	}
+
+	function clearInputFile(){
+		let input = document.getElementById('upload')
+		let showImageDiv = document.getElementById('images-show') 
+		input.value = ''
+		showImageDiv.innerHTML = ''
+		
 	}
 
 </script>
