@@ -6,7 +6,7 @@ from .models import Images
 class ImagesAdmin(admin.ModelAdmin):
     list_display = ('id', 'user')
     search_fields = ('user',)
-    readonly_fields=('id', 'user', 'image')
+    readonly_fields=('id',)
 
     filter_horizontal = ()
     list_filter = ()

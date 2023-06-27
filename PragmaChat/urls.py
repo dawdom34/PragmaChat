@@ -23,6 +23,8 @@ from personal.views import home_screen_view
 
 from users.views import register_view, login_view, logout_view, account_search_view
 
+from images_api.views import ImageViewSet
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_screen_view, name='home'),
@@ -34,6 +36,8 @@ urlpatterns = [
     path('friend/', include('friend.urls', namespace='friend')),
     # Group chat
     path('group_chat/', include('group_chat.urls', namespace='group_chat')),
+    # Images public chat
+    path('public_chat_image/', ImageViewSet.as_view(), name='public_chat_image'),
     # Register new user
     path('register/', register_view, name='register'),
     # Search user
