@@ -127,7 +127,7 @@ PUBLIC CHAT
 				<label for="upload" id="label-upload"><span class="material-icons" id="upload-icon">
 					collections
 					</span></label>
-				<input type="file" id="upload" onchange="showImage(this);" style="opacity: 0; position: absolute; margin-left: 100%;">
+				<input type="file" accept="image/*" id="upload" onchange="showImage(this);" style="opacity: 0; position: absolute; margin-left: 100%;">
                 <button class="btn btn-primary chat-message-submit-button">
                     <span id="id_chat_message_submit" class="material-icons">send
                     </span>
@@ -136,8 +136,6 @@ PUBLIC CHAT
         </div>
     </div>
 </div>
-
-
 <script type="text/javascript">
 	
 	// Correctly decide between ws:// and wss://
@@ -228,12 +226,16 @@ PUBLIC CHAT
     document.getElementById('id_chat_message_submit').onclick = function(e) {
 		const messageInputDom = document.getElementById('id_chat_message_input');
 		const message = messageInputDom.value;
+		if (document.getElementById('upload').value != ''){
+			sendImage()
+		}
 		public_chat_socket.send(JSON.stringify({
 			"command": "send",
 			"message": message,
 			"room_id": "{{room_id}}"
 		}));
 		messageInputDom.value = '';
+		clearInputFile()
 	};
 
 	function appendChatMessage(data, maintainPosition, isNewMessage){
@@ -447,6 +449,27 @@ PUBLIC CHAT
 		input.value = ''
 		showImageDiv.innerHTML = ''
 		
+	}
+
+	function sendImage(){
+		let img = document.querySelector('#upload')
+		let data = new FormData()
+		data.append('user', "{{request.user.id}}")
+		data.append('image', img.files[0])
+		data.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+
+		fetch('/public_chat_image/', {
+			method: 'POST',
+			body: data
+		}).then((response) => {
+			return response.json()
+		}).then((data) => {
+			let image = data
+			let msg_data = []
+			msg_data.push(image.image.user)
+			msg_data.push(image.image.image)
+			return msg_data
+		})
 	}
 
 </script>
