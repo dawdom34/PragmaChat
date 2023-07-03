@@ -58,10 +58,11 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 		print("PublicChatConsumer: receive_json: " + str(command))
 		try:
 			if command == "send":
-				if len(content["message"].lstrip()) == 0:
-					raise ClientError(422, 'You cannot send an empty message.')
-				await self.send_room(content['room_id'], content['message'])
-
+				if len(content["message"].lstrip()) != 0:
+					await self.send_room(content['room_id'], content['message'])
+			elif command == "image":
+				if len(content["message"].lstrip()) != 0:
+					await self.send_image(content['room_id'], content['message'])
 			elif command == "join":
 				# Join the room
 				await self.join_room(content['room'])
@@ -117,6 +118,7 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 				"username": self.scope["user"].username,
 				"user_id": self.scope["user"].id,
 				"message": message,
+				"msg_type": "text",
 			}
 		)
 
@@ -258,6 +260,56 @@ class PublicChatConsumer(AsyncJsonWebsocketConsumer):
 				"display_progress_bar": is_displayed
 			}
 		)
+	
+	async def send_image(self, room_id, message):
+		"""
+		Called by receive_json when someone sends a image to a room.
+		"""
+		# Check they are in this room
+		print("PublicChatConsumer: send_image")
+		if self.room_id != None:
+			if str(room_id) != str(self.room_id):
+				raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
+			if not is_authenticated(self.scope["user"]):
+				raise ClientError("AUTH_ERROR", "You must be authenticated to chat.")
+		else:
+			raise ClientError("ROOM_ACCESS_DENIED", "Room access denied")
+
+		# Get the room and send to the group about it
+		room = await get_room_or_error(room_id)
+
+		# Save the message to database
+		await create_public_chat_message(room, self.scope['user'], message, 'image')
+
+		await self.channel_layer.group_send(
+			room.group_name,
+			{
+				"type": "chat.image",
+				"profile_image": self.scope["user"].profile_image.url,
+				"username": self.scope["user"].username,
+				"user_id": self.scope["user"].id,
+				"message": message,
+				"msg_type": "image",
+			}
+		)
+	
+	async def chat_image(self, event):
+		"""
+		Called when someone has messaged our chat.
+		"""
+		# Send a message down to the client
+		print("PublicChatConsumer: chat_message from user #" + str(event["user_id"]))
+		timestamp = calculate_timestamp(datetime.now())
+		await self.send_json(
+			{
+				"msg_type": MSG_TYPE_IMAGE,
+				"profile_image": event["profile_image"],
+				"username": event["username"],
+				"user_id": event["user_id"],
+				"message": event["message"],
+				"natural_timestamp": timestamp,
+			},
+		)
 
 def is_authenticated(user):
 	"""
@@ -276,11 +328,11 @@ def get_num_connected_users(room):
 	return 0
 
 @database_sync_to_async
-def create_public_chat_message(room, user, message):
+def create_public_chat_message(room, user, message, type='text'):
 	"""
 	Save the message to database
 	"""
-	return PublicRoomChatMessage.objects.create(user=user, room=room, content=message)
+	return PublicRoomChatMessage.objects.create(user=user, room=room, content=message, type=type)
 
 @database_sync_to_async
 def connect_user(room, user):
@@ -335,7 +387,10 @@ def get_room_chat_messages(room, page_number):
 class ChatMessageEncoder(Serializer):
 	def get_dump_object(self, obj: Model):
 		dump_object = {}
-		dump_object.update({'msg_type': MSG_TYPE_MESSAGE})
+		if str(obj.type) == 'text':
+			dump_object.update({'msg_type': 'text'})
+		else:
+			dump_object.update({'msg_type': 'image'})
 		dump_object.update({'user_id': str(obj.user.id)})
 		dump_object.update({'msg_id': str(obj.id)})
 		dump_object.update({'username': str(obj.user.username)})

@@ -90,6 +90,9 @@
 		margin-left: 25%;
 		margin-top: 25%;
 	}
+	#upload{
+		width: 0px;
+	}
 
 </style>
 
@@ -127,7 +130,7 @@ PUBLIC CHAT
 				<label for="upload" id="label-upload"><span class="material-icons" id="upload-icon">
 					collections
 					</span></label>
-				<input type="file" accept="image/*" id="upload" onchange="showImage(this);" style="opacity: 0; position: absolute; margin-left: 100%;">
+				<input type="file" accept="image/*" id="upload" onchange="showImage(this);">
                 <button class="btn btn-primary chat-message-submit-button">
                     <span id="id_chat_message_submit" class="material-icons">send
                     </span>
@@ -169,12 +172,17 @@ PUBLIC CHAT
 
 		// Handle getting a message
 		if (data.msg_type == 0) {
-			appendChatMessage(data, true, true)
+			appendChatMessage(data, 'text', true, true)
 		}
 
 		// Handle getting the connected_user count
 		if (data.msg_type == 1){
 			setConnectedUsersCount(data['connected_user_count'])
+		}
+
+		// Handle getting an image
+		if (data.msg_type == 2){
+			appendChatMessage(data, 'image', true, true)
 		}
 
 		// new payload of messages coming in from backend
@@ -238,7 +246,7 @@ PUBLIC CHAT
 		clearInputFile()
 	};
 
-	function appendChatMessage(data, maintainPosition, isNewMessage){
+	function appendChatMessage(data, msg_type, maintainPosition, isNewMessage){
 		message = data['message']
 		uName = data['username']
 		user_id = data['user_id']
@@ -246,16 +254,22 @@ PUBLIC CHAT
 		timestamp = data['natural_timestamp']
 		msg_id = data['msg_id']
 		
-		var msg = message + '\n';
-		var username = uName + ": "
-		createChatMessageElement(msg, msg_id, username, profile_image, user_id, timestamp, maintainPosition, isNewMessage)
+		if (msg_type == 'text'){
+			var msg = message + '\n';
+			var username = uName + ": "
+			createChatMessageElement(msg, msg_id, username, profile_image, user_id, timestamp, maintainPosition, isNewMessage)
+		}else{
+			var username = uName + '\n'
+			createChatImageElement(message, msg_id, username, profile_image, user_id, timestamp, maintainPosition, isNewMessage)
+		}
+		
 	}
 
 	function handleMessagesPayload(messages, new_page_number){
 		if(messages != null && messages != "undefined" && messages != "None"){
 			setPageNumber(new_page_number)
 			messages.forEach(function(message){
-				appendChatMessage(message, true, false)
+				appendChatMessage(message, message["msg_type"], true, false)
 			})
 		}
 		else{
@@ -368,6 +382,74 @@ PUBLIC CHAT
 		
 	}
 
+	function createChatImageElement(msg, msg_id, username, profile_image, user_id, timestamp, maintainPosition, isNewMessage){
+		var chatLog = document.getElementById("id_chat_log")
+
+		var newMessageDiv = document.createElement("div")
+		newMessageDiv.classList.add("d-flex")
+		newMessageDiv.classList.add("flex-row")
+		newMessageDiv.classList.add("message-container")
+
+		var profileImage = document.createElement("img")
+		profileImage.addEventListener("click", function(e){
+			selectUser(user_id)
+		})
+		profileImage.classList.add("profile-image")
+		profileImage.classList.add("rounded-circle")
+		profileImage.classList.add("img-fluid")
+		profileImage.src = "{% static 'PragmaChat/dummy-profile.png' %}"
+		var profile_image_id = "id_profile_image_" + msg_id
+		profileImage.id = profile_image_id
+		newMessageDiv.appendChild(profileImage)
+
+		var div1 = document.createElement("div")
+		div1.classList.add("d-flex")
+		div1.classList.add("flex-column")
+
+		var div2 = document.createElement("div")
+		div2.classList.add("d-flex")
+		div2.classList.add("flex-row")
+
+		var usernameSpan = document.createElement("span")
+		usernameSpan.addEventListener("click", function(e){
+			selectUser(user_id)
+		})
+		usernameSpan.classList.add("username-span")
+		usernameSpan.innerHTML = username
+		div2.appendChild(usernameSpan)
+
+		var timestampSpan = document.createElement("span")
+		timestampSpan.innerHTML = timestamp
+		timestampSpan.classList.add("timestamp-span")
+		timestampSpan.classList.add("d-flex")
+		timestampSpan.classList.add("align-items-center")
+		timestampSpan.addEventListener("click", function(e){
+			selectUser(user_id)
+		})
+		div2.appendChild(timestampSpan)
+
+		div1.appendChild(div2)
+
+		var msgImg = document.createElement('img')
+		msgImg.src = msg
+		div1.appendChild(msgImg)
+
+		newMessageDiv.appendChild(div1)
+
+		if(isNewMessage){
+            chatLog.insertBefore(newMessageDiv, chatLog.firstChild)
+        }else{
+            chatLog.appendChild(newMessageDiv)
+        }
+        if(!maintainPosition){
+            chatLog.scrollTop = chatLog.scrollHeight
+        }
+
+		// Default imases is showing, now load actial images
+		// Called from base_js.html
+		preloadImage(profile_image, profile_image_id)
+	}
+
 	function selectUser(user_id){
 		// Weird work-around for passing arg to url
 		var url = "{% url 'users:view' user_id=53252623623632623 %}".replace("53252623623632623", user_id)
@@ -465,10 +547,14 @@ PUBLIC CHAT
 			return response.json()
 		}).then((data) => {
 			let image = data
-			let msg_data = []
-			msg_data.push(image.image.user)
-			msg_data.push(image.image.image)
-			return msg_data
+			let user = image.image.user
+			let img = image.image.image
+			public_chat_socket.send(JSON.stringify({
+				"command": "image",
+				"user": user,
+				"message": img,
+				"room_id": "{{room_id}}"
+			}));
 		})
 	}
 
